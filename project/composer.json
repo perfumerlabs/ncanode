@@ -1,0 +1,39 @@
+{
+    "name": "perfumerlabs/ncanode",
+    "type": "library",
+    "description": "Ncanode docker container to hide private key",
+    "homepage": "https://perfumerlabs.com",
+    "authors": [
+        {
+            "name": "Ilyas Makashev",
+            "email": "mehmatovec@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "perfumer/framework": "0.8.3",
+        "pwfisher/command-line-php": "dev-master",
+        "symfony/console": "5.*",
+        "symfony/http-foundation": "5.*",
+        "malikzh/php-ncanode": "^1.0",
+        "guzzlehttp/guzzle": "6.*",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "filp/whoops": "2.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Project\\": "src/",
+            "Ncanode\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "preferred-install": "dist"
+    }
+}
