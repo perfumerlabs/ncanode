@@ -9,8 +9,6 @@ set -x \
 && cp -r "/usr/share/container_config/nginx" /etc/nginx \
 && cp -r "/usr/share/container_config/supervisor" /etc/supervisor
 
-sed -i "s/NCANODE_HOST/$NCANODE_HOST/g" /etc/nginx/sites/ncanode.conf
-
 sed -i "s/error_log = \/var\/log\/php7.4-fpm.log/error_log = \/dev\/stdout/g" /etc/php/7.4/fpm/php-fpm.conf
 sed -i "s/;error_log = syslog/error_log = \/dev\/stdout/g" /etc/php/7.4/fpm/php.ini
 sed -i "s/;error_log = syslog/error_log = \/dev\/stdout/g" /etc/php/7.4/cli/php.ini
@@ -33,9 +31,17 @@ NCANODE_KEY_SED=${NCANODE_KEY_SED//\./\\\.}
 NCANODE_PWD_SED=${NCANODE_PWD//\//\\\/}
 NCANODE_PWD_SED=${NCANODE_PWD_SED//\./\\\.}
 
-sed -i "s/NCANODE_HOST/$NCANODE_HOST/g" /opt/ncanode/src/Gateway.php
-sed -i "s/NCANODE_REMOTE_URL/$NCANODE_REMOTE_URL_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
-sed -i "s/NCANODE_KEY/$NCANODE_KEY_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
-sed -i "s/NCANODE_PWD/$NCANODE_PWD_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
+if [ $DEV != 'true' ]; then
+  sed -i "s/NCANODE_REMOTE_URL/$NCANODE_REMOTE_URL_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/NCANODE_KEY/$NCANODE_KEY_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/NCANODE_PWD/$NCANODE_PWD_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
+fi
+
+if [ $DEV = 'true' ]; then
+  set -x \
+  && cd /opt/ncanode \
+  && cp env.example.php env.php \
+  && cp propel.example.php propel.php
+fi
 
 touch /node_status_inited

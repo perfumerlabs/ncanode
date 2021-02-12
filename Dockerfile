@@ -49,12 +49,12 @@ RUN set -x\
     && chmod +x /usr/local/bin/entrypoint.sh \
     && chmod +x /usr/local/bin/init.sh
 
-ENV NCANODE_HOST ncanode
 ENV NCANODE_REMOTE_URL ''
 ENV NCANODE_KEY ''
 ENV NCANODE_PWD ''
 ENV PHP_PM_MAX_CHILDREN 10
 ENV PHP_PM_MAX_REQUESTS 500
+ENV DEV false
 
 EXPOSE 80
 

@@ -1,5 +1,8 @@
 .idea
 .sass-cache
+.php_cs.cache
 nbproject
 /project/tmp/*
 /project/vendor/*
+env.php
+propel.php

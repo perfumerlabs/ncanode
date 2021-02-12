@@ -13,17 +13,15 @@ Installation
 ```bash
 docker run \
 -p 80:80/tcp \
--e NCANODE_HOST=example.com \
 -e NCANODE_REMOTE_URL=http://127.0.0.1:14579 \
 -e NCANODE_KEY=/path/to/key \
 -e NCANODE_PWD=123456 \
--d perfumerlabs/ncanode:v1.0.0
+-d perfumerlabs/ncanode:v2.0.0
 ```
 
 Environment variables
 =====================
 
-- NCANODE_HOST - container http-server domain (without http://). Required.
 - NCANODE_REMOTE_URL - full url to original ncanode server. Required.
 - NCANODE_KEY - path to private key on the container. Required.
 - NCANODE_PWD - password of the private key. Required.
