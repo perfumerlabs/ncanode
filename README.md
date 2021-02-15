@@ -64,8 +64,6 @@ Success response:
 </p>
 </details>
 
-### RAW
-
 <details>
 <summary><code>POST /raw/verify</code> - verify CMS-sign</summary>
 <p>
