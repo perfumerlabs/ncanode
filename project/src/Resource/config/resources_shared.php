@@ -7,4 +7,12 @@ return [
         'pwd' => 'NCANODE_PWD',
         'dummy' => 'NCANODE_DUMMY',
     ],
+    '_translator' => [
+        [__DIR__ . './../translation/ru/common.php'],
+        [__DIR__ . './../translation/ru/errors.php'],
+        [__DIR__ . './../translation/en/common.php'],
+        [__DIR__ . './../translation/en/errors.php'],
+        [__DIR__ . './../translation/kz/common.php'],
+        [__DIR__ . './../translation/kz/errors.php'],
+    ],
 ];

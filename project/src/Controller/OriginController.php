@@ -25,7 +25,7 @@ class OriginController extends LayoutController
         $key = file_get_contents($NCANODE_KEY);
 
         if (!$key) {
-            $this->forward('error', 'badRequest', ['No key found']);
+            $this->forward('error', 'badRequest', [$this->t('error.no_key_found')]);
         }
 
         $key = base64_encode($key);

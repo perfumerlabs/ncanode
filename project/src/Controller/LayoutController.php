@@ -16,11 +16,15 @@ class LayoutController extends ViewController
     {
         parent::before();
 
+        $api_locale = $this->getExternalRequest()->headers->get('api-locale');
+        if (!$api_locale) {
+            $api_locale = 'ru';
+        }
+
         /** @var Translator $translator */
         $translator = $this->s('translator');
-        $translator->setLocale('ru');
+        $translator->setLocale($api_locale);
     }
-
 
     protected function validateNotEmpty($var, $name)
     {

@@ -18,24 +18,31 @@ class ValidateController extends LayoutController
 
     public function post()
     {
-        $cms         = (string) $this->f('cms');
-        $xml         = (string) $this->f('xml');
-        $iin         = (string) $this->f('iin');
-        $bin         = (string) $this->f('bin');
-        $rule        = (string) $this->f('rule');
-        $verify_ocsp = (bool) $this->f('verify_ocsp', true);
-        $verify_crl  = (bool) $this->f('verify_crl', true);
+        $cms        = (string) $this->f('cms');
+        $xml        = (string) $this->f('xml');
+        $iin        = (string) $this->f('iin');
+        $bin        = (string) $this->f('bin');
+        $rule       = (string) $this->f('rule');
+        $expiration = (bool) $this->f('expiration', true);
+
+        if ($expiration) {
+            $verify_ocsp = true;
+            $verify_crl = true;
+        } else {
+            $verify_ocsp = false;
+            $verify_crl = false;
+        }
 
         if (!$cms && !$xml) {
-            $this->forward('error', 'badRequest', ["CMS or XML parameter must be set"]);
+            $this->forward('error', 'badRequest', [$this->t('error.cms_or_xml_required')]);
         }
 
         if ($cms && $xml) {
-            $this->forward('error', 'badRequest', ["Only one of CMS or XML parameter must be set"]);
+            $this->forward('error', 'badRequest', [$this->t('error.only_cms_or_xml_required')]);
         }
 
         if (!in_array($rule, self::RULES)) {
-            $this->forward('error', 'badRequest', ["Rule parameter must be one of " . implode(', ', self::RULES)]);
+            $this->forward('error', 'badRequest', [$this->t('error.rules_invalid') . ' ' . implode(', ', self::RULES)]);
         }
 
         /** @var Ncanode $ncanode */
@@ -51,11 +58,11 @@ class ValidateController extends LayoutController
             }
 
             if (!$legal) {
-                $this->forward('error', 'badRequest', ["Certificate is not legal"]);
+                $this->forward('error', 'badRequest', [$this->t('error.certificate_not_legal')]);
             }
 
             if (!$not_expired) {
-                $this->forward('error', 'badRequest', ["Certificate is expired"]);
+                $this->forward('error', 'badRequest', [$this->t('error.certificate_is_expired')]);
             }
 
             $result = false;
