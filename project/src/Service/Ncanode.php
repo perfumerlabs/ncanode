@@ -2,6 +2,7 @@
 
 namespace Project\Service;
 
+use Malikzh\PhpNCANode\CertificateInfo;
 use Malikzh\PhpNCANode\NCANodeClient;
 use Malikzh\PhpNCANode\XMLVerificationResult;
 
@@ -252,5 +253,593 @@ class Ncanode extends NCANodeClient
         }
 
         return $this->xmlVerifyResult['result'];
+    }
+
+    /**
+     * Проверяем валиден ли сертификат по подписи
+     *
+     * @param string $cms
+     * @param bool   $verifyOcsp
+     * @param bool   $verifyCrl
+     * @param bool   $checkChain
+     * @return bool
+     */
+    public function isCertificateLegal(
+        string $cms,
+        bool $verifyOcsp = false,
+        bool $verifyCrl = false,
+        bool $checkChain = true
+    ): bool {
+        if ($this->dummy) {
+            return true;
+        }
+
+        $rawVerifyResult = $this->rawVerify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!isset($rawVerifyResult['cert'])) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult['cert']);
+
+        return $certificateInfo->isLegal($checkChain);
+    }
+
+    /**
+     * Проверяем валиден ли сертификат по XML подписи
+     *
+     * @param string $xml
+     * @param bool   $verifyOcsp
+     * @param bool   $verifyCrl
+     * @param bool   $checkChain
+     * @return bool
+     */
+    public function isXmlCertificateLegal(
+        string $xml,
+        bool $verifyOcsp = false,
+        bool $verifyCrl = false,
+        bool $checkChain = true
+    ): bool {
+        if ($this->dummy) {
+            return true;
+        }
+
+        $xmlVerifyResult = $this->xmlVerify($xml, $verifyOcsp, $verifyCrl);
+
+        if (!$xmlVerifyResult) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($xmlVerifyResult['cert']);
+
+        return $certificateInfo->isLegal($checkChain);
+    }
+
+    public function isAuthCertificate(string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): bool
+    {
+        if ($this->dummy) {
+            return true;
+        }
+
+        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!$rawVerifyResult) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult);
+
+        if ($certificateInfo->__get('keyUsage') !== 'AUTH') {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Проверяем валиден ли сертификат по подписи
+     *
+     * @param string $cms
+     * @param bool   $verifyOcsp
+     * @param bool   $verifyCrl
+     * @param bool   $checkChain
+     * @return bool
+     */
+    public function isAuthCertificateLegal(
+        string $cms,
+        bool $verifyOcsp = false,
+        bool $verifyCrl = false,
+        bool $checkChain = true
+    ): bool {
+        if ($this->dummy) {
+            return true;
+        }
+
+        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!$rawVerifyResult) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult);
+
+        return $certificateInfo->isLegal($checkChain);
+    }
+
+    /**
+     * Проверяем не окончился ли срок действия сертификата по подписи
+     *
+     * @param string $cms
+     * @param bool   $verifyOcsp
+     * @param bool   $verifyCrl
+     * @param null   $date
+     * @return bool
+     */
+    public function isCertificateNotExpired(
+        string $cms,
+        bool $verifyOcsp = false,
+        bool $verifyCrl = false,
+        $date = null
+    ): bool {
+        if ($this->dummy) {
+            return true;
+        }
+
+        $rawVerifyResult = $this->rawVerify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!isset($rawVerifyResult['cert'])) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult['cert']);
+
+        return !$certificateInfo->isExpired($date);
+    }
+
+    /**
+     * Проверяем не окончился ли срок действия сертификата по XML подписи
+     *
+     * @param string $xml
+     * @param bool   $verifyOcsp
+     * @param bool   $verifyCrl
+     * @param null   $date
+     * @return bool
+     */
+    public function isXmlCertificateNotExpired(
+        string $xml,
+        bool $verifyOcsp = false,
+        bool $verifyCrl = false,
+        $date = null
+    ): bool {
+        if ($this->dummy) {
+            return true;
+        }
+
+        $xmlVerifyResult = $this->xmlVerify($xml, $verifyOcsp, $verifyCrl);
+
+        if (!isset($xmlVerifyResult['cert'])) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($xmlVerifyResult['cert']);
+
+        return !$certificateInfo->isExpired($date);
+    }
+
+    /**
+     * Проверяем не окончился ли срок действия сертификата по подписи
+     *
+     * @param string $cms
+     * @param bool   $verifyOcsp
+     * @param bool   $verifyCrl
+     * @param null   $date
+     * @return bool
+     */
+    public function isAuthCertificateNotExpired(
+        string $cms,
+        bool $verifyOcsp = false,
+        bool $verifyCrl = false,
+        $date = null
+    ): bool {
+        if ($this->dummy) {
+            return true;
+        }
+
+        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!$rawVerifyResult) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult);
+
+        return !$certificateInfo->isExpired($date);
+    }
+
+    /**
+     * Получаем ИИН по подписи
+     *
+     * @param string|null $cms
+     * @param bool        $verifyOcsp
+     * @param bool        $verifyCrl
+     * @return string|null
+     */
+    public function getIin(?string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): ?string
+    {
+        if (!$cms) {
+            return null;
+        }
+
+        $rawVerifyResult = $this->rawVerify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!isset($rawVerifyResult['cert'])) {
+            return null;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult['cert']);
+
+        $subject = $certificateInfo->__get('subject');
+
+        return $subject['iin'] ?? null;
+    }
+
+    /**
+     * Получаем ИИН по подписи AUTH
+     *
+     * @param string|null $cms
+     * @param bool        $verifyOcsp
+     * @param bool        $verifyCrl
+     * @return string|null
+     */
+    public function getIinFromX509(?string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): ?string
+    {
+        if (!$cms) {
+            return null;
+        }
+
+        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!$rawVerifyResult) {
+            return null;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult);
+
+        $subject = $certificateInfo->__get('subject');
+
+        return $subject['iin'] ?? null;
+    }
+
+    /**
+     * получаем данные субъекта по подписи
+     *
+     * @param string|null $cms
+     * @param bool        $verifyOcsp
+     * @param bool        $verifyCrl
+     * @return array|null
+     */
+    public function getSubject(?string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): ?array
+    {
+        if (!$cms) {
+            return null;
+        }
+
+        $rawVerifyResult = $this->rawVerify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!isset($rawVerifyResult['cert'])) {
+            return null;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult['cert']);
+
+        return $certificateInfo->__get('subject');
+    }
+
+    /**
+     * получаем данные субъекта по подписи
+     *
+     * @param string|null $cms
+     * @param bool        $verifyOcsp
+     * @param bool        $verifyCrl
+     * @return array|null
+     */
+    public function getSubjectFromX509(?string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): ?array
+    {
+        if (!$cms) {
+            return null;
+        }
+
+        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!$rawVerifyResult) {
+            return null;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult);
+
+        return $certificateInfo->__get('subject');
+    }
+
+    /**
+     * Получаем ИИН по XML подписи
+     *
+     * @param string|null $xml
+     * @param bool        $verifyOcsp
+     * @param false       $verifyCrl
+     * @return mixed|null
+     */
+    public function getIinByXml(?string $xml, bool $verifyOcsp = false, $verifyCrl = false)
+    {
+        if (!$xml) {
+            return null;
+        }
+
+        $xmlVerifyResult = $this->xmlVerify($xml, $verifyOcsp, $verifyCrl);
+
+        if (!isset($xmlVerifyResult['cert'])) {
+            return null;
+        }
+
+        $certificateInfo = new CertificateInfo($xmlVerifyResult['cert']);
+
+        $subject = $certificateInfo->__get('subject');
+
+        return $subject['iin'] ?? null;
+    }
+
+    /**
+     * Получаем БИН по подписи
+     *
+     * @param string|null $cms
+     * @param bool        $verifyOcsp
+     * @param bool        $verifyCrl
+     * @return string|null
+     */
+    public function getBin(?string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): ?string
+    {
+        if (!$cms) {
+            return null;
+        }
+
+        $rawVerifyResult = $this->rawVerify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!isset($rawVerifyResult['cert'])) {
+            return null;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult['cert']);
+
+        $subject = $certificateInfo->__get('subject');
+
+        return $subject['bin'] ?? null;
+    }
+
+    /**
+     * Получаем БИН по подписи
+     *
+     * @param string|null $cms
+     * @param bool        $verifyOcsp
+     * @param bool        $verifyCrl
+     * @return string|null
+     */
+    public function getBinByX509(?string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): ?string
+    {
+        if (!$cms) {
+            return null;
+        }
+
+        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!isset($rawVerifyResult)) {
+            return null;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult);
+
+        $subject = $certificateInfo->__get('subject');
+
+        return $subject['bin'] ?? null;
+    }
+
+    /**
+     * Получаем БИН по XML подписи
+     *
+     * @param string|null $xml
+     * @param bool        $verifyOcsp
+     * @param bool        $verifyCrl
+     * @return string|null
+     */
+    public function getBinByXml(?string $xml, bool $verifyOcsp = false, bool $verifyCrl = false): ?string
+    {
+        if (!$xml) {
+            return null;
+        }
+
+        $xmlVerifyResult = $this->xmlVerify($xml, $verifyOcsp, $verifyCrl);
+
+        if (!isset($xmlVerifyResult['cert'])) {
+            return null;
+        }
+
+        $certificateInfo = new CertificateInfo($xmlVerifyResult['cert']);
+
+        $subject = $certificateInfo->__get('subject');
+
+        return $subject['bin'] ?? null;
+    }
+
+    public function isEmployee(string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): bool
+    {
+        $rawVerifyResult = $this->rawVerify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!isset($rawVerifyResult['cert'])) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult['cert']);
+
+        $keyUser = $certificateInfo->__get('keyUser');
+
+        if (in_array('EMPLOYEE', $keyUser, true)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isEmployeeByXml(string $xml, bool $verifyOcsp = false, bool $verifyCrl = false): bool
+    {
+        $xmlVerifyResult = $this->xmlVerify($xml, $verifyOcsp, $verifyCrl);
+
+        if (!isset($xmlVerifyResult['cert'])) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($xmlVerifyResult['cert']);
+
+        $keyUser = $certificateInfo->__get('keyUser');
+
+        if (in_array('EMPLOYEE', $keyUser, true)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isIndividual(string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): bool
+    {
+        if (!$cms) {
+            return false;
+        }
+
+        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!$rawVerifyResult) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult);
+
+        $keyUser = $certificateInfo->__get('keyUser');
+
+        if (in_array('INDIVIDUAL', $keyUser, true)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isIndividualByXml(string $xml, bool $verifyOcsp = false, bool $verifyCrl = false): bool
+    {
+        if (!$xml) {
+            return false;
+        }
+
+        $xmlVerifyResult = $this->xmlVerify($xml, $verifyOcsp, $verifyCrl);
+
+        if (!isset($xmlVerifyResult['cert'])) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($xmlVerifyResult['cert']);
+
+        $keyUser = $certificateInfo->__get('keyUser');
+
+        if (in_array('INDIVIDUAL', $keyUser, true)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isOrganization(string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): bool
+    {
+        if (!$cms) {
+            return false;
+        }
+
+        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!$rawVerifyResult) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult);
+
+        $keyUser = $certificateInfo->__get('keyUser');
+
+        if (in_array('ORGANIZATION', $keyUser, true)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isOrganizationByXml(string $xml, bool $verifyOcsp = false, bool $verifyCrl = false): bool
+    {
+        if (!$xml) {
+            return false;
+        }
+
+        $xmlVerifyResult = $this->xmlVerify($xml, $verifyOcsp, $verifyCrl);
+
+        if (!isset($xmlVerifyResult['cert'])) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($xmlVerifyResult['cert']);
+
+        $keyUser = $certificateInfo->__get('keyUser');
+
+        if (in_array('ORGANIZATION', $keyUser, true)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isCeo(string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): bool
+    {
+        $rawVerifyResult = $this->rawVerify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!isset($rawVerifyResult['cert'])) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult['cert']);
+
+        $keyUser = $certificateInfo->__get('keyUser');
+
+        if (in_array('CEO', $keyUser, true)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isCeoByXml(string $xml, bool $verifyOcsp = false, bool $verifyCrl = false): bool
+    {
+        $xmlVerifyResult = $this->xmlVerify($xml, $verifyOcsp, $verifyCrl);
+
+        if (!isset($xmlVerifyResult['cert'])) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($xmlVerifyResult['cert']);
+
+        $keyUser = $certificateInfo->__get('keyUser');
+
+        if (in_array('CEO', $keyUser, true)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function doRequest(array $request)
+    {
+        $response = $this->request($request);
+
+        return $response['result'];
     }
 }
