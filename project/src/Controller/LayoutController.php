@@ -2,25 +2,34 @@
 
 namespace Ncanode\Controller;
 
-use Perfumer\Framework\Controller\PlainController;
-use Perfumer\Framework\Router\Http\DefaultRouterControllerHelpers;
-use Symfony\Component\Translation\PluralizationRules;
+use Perfumer\Framework\Controller\ViewController;
+use Perfumer\Framework\Router\Http\FastRouteRouterControllerHelpers;
+use Perfumer\Framework\View\StatusViewControllerHelpers;
 use Symfony\Component\Translation\Translator;
 
-class LayoutController extends PlainController
+class LayoutController extends ViewController
 {
-    use DefaultRouterControllerHelpers;
+    use FastRouteRouterControllerHelpers;
+    use StatusViewControllerHelpers;
 
     protected function before()
     {
         parent::before();
 
-        PluralizationRules::set(function ($number) {
-            return (1 == $number) ? 0 : 1;
-        }, 'kz');
+        $api_locale = $this->getExternalRequest()->headers->get('api-locale');
+        if (!$api_locale) {
+            $api_locale = 'ru';
+        }
 
         /** @var Translator $translator */
         $translator = $this->s('translator');
-        $translator->setLocale('ru');
+        $translator->setLocale($api_locale);
+    }
+
+    protected function validateNotEmpty($var, $name)
+    {
+        if (!$var) {
+            $this->forward('error', 'badRequest', ["\"$name\" parameter must be set"]);
+        }
     }
 }

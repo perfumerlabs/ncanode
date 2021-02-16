@@ -39,3 +39,162 @@ Software
 1. Ubuntu 16.04 Xenial
 1. Nginx 1.16
 1. PHP 7.4
+
+API REFERENCE
+=============
+
+<details>
+<summary><code>POST /validate</code> - validate CMS or XML sign by rule parameter</summary>
+<p>
+
+Parameters (json):
+- cms [string,optional] - CMS-sign in Base64 format
+- xml [string,optional] - XML-sign
+- iin [string,optional] - IIN
+- bin [string,optional] - BIN
+- rule [string,required] - Rule for validating. One of ['iin', 'bin', 'auth', 'individual', 'employee', 'ceo', 'organisation']
+</p>
+<p>
+
+Success response:
+```json
+{
+  "status": true,
+  "message": null,
+  "content": {
+    "result": true
+  }
+}
+```
+</p>
+</details>
+
+<details>
+<summary><code>POST /origin</code> - ncanode origin request</summary>
+<p>
+
+Parameters (json):
+- method [string,required] - Method. Ex. 'XML.sign'
+- version [string, optional] - ncanode api version. Default '1.0'
+- params [array, optional] - array of params
+</p>
+
+<p>
+
+Success response:
+```json
+{
+  "status": true,
+  "message": null,
+  "content": {
+    "result": {
+      "xml": "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?><root><name>NCANode</name><ds:Signature xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">\r\n<ds:SignedInfo>\r\n<ds:CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315\"/>\r\n<ds:SignatureMethod Algorithm=\"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256\"/>\r\n<ds:Reference URI=\"\">\r\n<ds:Transforms>\r\n<ds:Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\"/>\r\n<ds:Transform Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/>\r\n</ds:Transforms>\r\n<ds:DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\"/>\r\n<ds:DigestValue>ybvg7uzrmIoa6Q02yU8BiLjYNl64fr+yXCtg0kHwdv4=</ds:DigestValue>\r\n</ds:Reference>\r\n</ds:SignedInfo>\r\n<ds:SignatureValue>\r\niSO1UrZLWBsiMAybQEkgvz7VgGjfmixA==\r\n</ds:SignatureValue>\r\n<ds:KeyInfo>\r\n<ds:X509Data>\r\n<ds:X509Certificate>\r\nLCt2q\r\n</ds:X509Certificate>\r\n</ds:X509Data>\r\n</ds:KeyInfo>\r\n</ds:Signature></root>"
+    }
+  }
+}
+```
+</p>
+</details>
+
+<details>
+<summary><code>GET /signature</code> - get signature</summary>
+<p>
+
+Parameters (json):
+- code [string,required] - code of signature
+</p>
+
+<p>
+
+Success response:
+```json
+{
+  "status": true,
+  "message": null,
+  "content": {
+    "signature": {
+      "id": 1,
+      "code": "ticket_12",
+      "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
+      "parent_id": null,
+      "created_at": ""
+    }
+  }
+}
+```
+</p>
+</details>
+
+<details>
+<summary><code>POST /signature</code> - save signature</summary>
+<p>
+
+Parameters (json):
+- code [string,required] - code of signature
+- signature [string, required] - CMS or XML of signed data
+- parent [string,optional] - code of parent signature
+- tags [array, optional] - array of tags
+</p>
+
+<p>
+
+Success response:
+```json
+{
+  "status": true,
+  "message": null,
+  "content": {
+    "signature": {
+      "id": 2,
+      "code": "ticket_13",
+      "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
+      "parent_id": null,
+      "created_at": ""
+    }
+  }
+}
+```
+</p>
+</details>
+
+<details>
+<summary><code>GET /signatures</code> - get signatures</summary>
+<p>
+
+Parameters (json):
+- parent [string,optional] - code of parent signature
+- tags [array, optional] - array of tags
+- limit [integer, optional] - limit of fetching data
+- offset [integer, optional] - offset of fetching data
+</p>
+
+<p>
+
+Success response:
+```json
+{
+  "status": true,
+  "message": null,
+  "content": {
+    "signatures": [
+      {
+        "id": 2,
+        "code": "ticket_13",
+        "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
+        "parent_id": null,
+        "created_at": ""
+      },
+      {
+        "id": 1,
+        "code": "ticket_12",
+        "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
+        "parent_id": null,
+        "created_at": ""
+      }
+    ]
+  }
+}
+
+```
+</p>
+</details>
