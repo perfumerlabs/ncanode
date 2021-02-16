@@ -25,10 +25,10 @@ class ValidateController extends LayoutController
         $rule       = (string) $this->f('rule');
         $expiration = (bool) $this->f('expiration', true);
 
-        if ($expiration) {
-            $verify_ocsp = true;
-            $verify_crl = true;
-        } else {
+        $verify_ocsp = true;
+        $verify_crl = true;
+
+        if (!$expiration) {
             $verify_ocsp = false;
             $verify_crl = false;
         }
