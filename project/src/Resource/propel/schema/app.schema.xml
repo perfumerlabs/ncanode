@@ -1,3 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <database name="ncanode" defaultIdMethod="native" namespace="Ncanode\Model">
+    <!--  table with saved signatures  -->
+    <table name="ncanode_signature" phpName="Signature">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true" />
+        <column name="code" type="varchar" size="255" required="true"/> <!-- Unique code signature -->
+        <column name="parent_id" type="integer"/> <!-- Parent signature ID -->
+        <column name="signature" type="longvarchar" required="true" /> <!-- CMS or XML sign -->
+        <column name="tags" type="array"/> <!-- Array of tags for search -->
+
+        <foreign-key foreignTable="ncanode_signature" phpName="Parent">
+            <reference local="parent_id" foreign="id"/>
+        </foreign-key>
+        <behavior name="timestampable"/>
+        <index>
+            <index-column name="code"/>
+        </index>
+        <unique>
+            <unique-column name="code"/>
+        </unique>
+        <unique>
+            <unique-column name="parent_id"/>
+        </unique>
+    </table>
 </database>

@@ -15,4 +15,14 @@ return [
             '@ncanode/dummy'
         ],
     ],
+
+    'ncanode.domain.signature' => [
+        'shared' => true,
+        'class' => 'Ncanode\\Domain\\SignatureDomain',
+    ],
+
+    'ncanode.repository.signature' => [
+        'shared' => true,
+        'class' => 'Ncanode\\Repository\\SignatureRepository',
+    ],
 ];

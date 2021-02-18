@@ -33,6 +33,7 @@ NCANODE_PWD_SED=${NCANODE_PWD_SED//\./\\\.}
 
 if [ $DEV != 'true' ]; then
   sed -i "s/NCANODE_REMOTE_URL/$NCANODE_REMOTE_URL_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/\$this->addResources(__DIR__ \. '\/\.\.\/env\.php');//g" /opt/ncanode/src/Application.php
   sed -i "s/NCANODE_KEY/$NCANODE_KEY_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/NCANODE_PWD/$NCANODE_PWD_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
 fi

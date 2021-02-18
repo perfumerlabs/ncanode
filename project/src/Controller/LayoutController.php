@@ -29,7 +29,7 @@ class LayoutController extends ViewController
     protected function validateNotEmpty($var, $name)
     {
         if (!$var) {
-            $this->forward('error', 'badRequest', ["\"$name\" parameter must be set"]);
+            $this->forward('error', 'badRequest', ["\"$name\" " . $this->t('error.parameter_must_be_set')]);
         }
     }
 }

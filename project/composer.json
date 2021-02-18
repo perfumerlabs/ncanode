@@ -19,6 +19,7 @@
         "symfony/http-foundation": "5.*",
         "malikzh/php-ncanode": "^1.0",
         "guzzlehttp/guzzle": "6.*",
+        "nikic/fast-route": "1.*",
         "ext-json": "*"
     },
     "require-dev": {

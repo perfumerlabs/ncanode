@@ -116,8 +116,14 @@ Success response:
       "id": 1,
       "code": "ticket_12",
       "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
-      "parent_id": null,
-      "created_at": ""
+      "parent": null,
+      "tags": [
+        "ticket_12",
+        "customer_1",
+        "bp_service"
+      ],
+      "created_at": "2021-02-18 15:00:00",
+      "updated_at": "2021-02-18 15:00:00"
     }
   }
 }
@@ -148,8 +154,14 @@ Success response:
       "id": 2,
       "code": "ticket_13",
       "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
-      "parent_id": null,
-      "created_at": ""
+      "parent": null,
+      "tags": [
+        "ticket_13",
+        "customer_1",
+        "bp_service"
+      ],
+      "created_at": "2021-02-18 15:00:00",
+      "updated_at": "2021-02-18 15:00:00"
     }
   }
 }
@@ -166,6 +178,7 @@ Parameters (json):
 - tags [array, optional] - array of tags
 - limit [integer, optional] - limit of fetching data
 - offset [integer, optional] - offset of fetching data
+- count [bool, optional] - show total count?
 </p>
 
 <p>
@@ -181,15 +194,27 @@ Success response:
         "id": 2,
         "code": "ticket_13",
         "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
-        "parent_id": null,
-        "created_at": ""
+        "parent": null,
+        "tags": [
+          "ticket_13",
+          "customer_1",
+          "bp_service"
+        ],
+        "created_at": "2021-02-18 15:00:00",
+        "updated_at": "2021-02-18 15:00:00"
       },
       {
         "id": 1,
         "code": "ticket_12",
         "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
-        "parent_id": null,
-        "created_at": ""
+        "parent": null,
+        "tags": [
+          "ticket_12",
+          "customer_1",
+          "bp_service"
+        ],
+        "created_at": "2021-02-18 15:00:00",
+        "updated_at": "2021-02-18 15:00:00"
       }
     ]
   }
