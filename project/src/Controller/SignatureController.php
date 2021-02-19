@@ -40,7 +40,7 @@ class SignatureController extends LayoutController
             }
 
             $obj = SignatureQuery::create()
-                ->filterByTags($tags, Criteria::CONTAINS_ALL)
+                ->filterByTags($tags, Criteria::CONTAINS_SOME)
                 ->orderByCreatedAt(Criteria::DESC)
                 ->findOne();
         }
