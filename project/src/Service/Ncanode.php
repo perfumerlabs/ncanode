@@ -838,8 +838,6 @@ class Ncanode extends NCANodeClient
 
     public function doRequest(array $request)
     {
-        $response = $this->request($request);
-
-        return $response['result'];
+        return $this->request($request);
     }
 }

@@ -11,7 +11,7 @@ return [
         'shared' => true,
         'class' => 'Project\Service\Ncanode',
         'arguments' => [
-            '@ncanode/host',
+            '@ncanode/remote_url',
             '@ncanode/dummy'
         ],
     ],

@@ -69,6 +69,14 @@ class SignatureController extends LayoutController
         $this->validateNotEmpty($code, 'code');
         $this->validateNotEmpty($signature, 'signature');
 
+        $exist_obj = SignatureQuery::create()
+            ->filterByCode($code)
+            ->exists();
+
+        if ($exist_obj) {
+            $this->forward('error', 'badRequest', [$this->t('error.signature_code_exists')]);
+        }
+
         /** @var SignatureDomain $domain */
         $domain = $this->s('ncanode.domain.signature');
 

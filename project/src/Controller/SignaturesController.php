@@ -11,7 +11,7 @@ class SignaturesController extends LayoutController
     public function get()
     {
         $parent = $this->f('parent');
-        $tags   = $this->f('code');
+        $tags   = $this->f('tags');
         $limit  = (int) $this->f('limit');
         $offset = (int) $this->f('offset');
         $count  = (bool) $this->f('count');

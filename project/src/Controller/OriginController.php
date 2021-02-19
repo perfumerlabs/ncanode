@@ -16,32 +16,37 @@ class OriginController extends LayoutController
             $this->validateNotEmpty($method, 'method');
         }
 
-        $NCANODE_KEY = $this->getContainer()->getParam('ncanode/key');
-        $pwd         = $this->getContainer()->getParam('ncanode/pwd');
+        $key = $this->getContainer()->getParam('ncanode/key');
+        $pwd = $this->getContainer()->getParam('ncanode/pwd');
 
-        /** @var Ncanode $ncanode */
-        $ncanode = $this->s('ncanode');
+        if ($key && $pwd) {
+            $key = file_get_contents($key);
 
-        $key = file_get_contents($NCANODE_KEY);
+            if (!$key) {
+                $this->forward('error', 'badRequest', [$this->t('error.no_key_found')]);
+            }
 
-        if (!$key) {
-            $this->forward('error', 'badRequest', [$this->t('error.no_key_found')]);
+            $key = base64_encode($key);
+
+            $params['p12']      = $key;
+            $params['password'] = $pwd;
         }
-
-        $key = base64_encode($key);
-
-        $params['p12']      = $key;
-        $params['password'] = $pwd;
 
         $request = [
             'method'  => $method,
             'version' => $version,
-            'params'  => $params,
         ];
+
+        if ($params) {
+            $request['params'] = $params;
+        }
+
+        /** @var Ncanode $ncanode */
+        $ncanode = $this->s('ncanode');
 
         try {
             $response = $ncanode->doRequest($request);
-            $this->setContent($response);
+            $this->setContent(['origin' => $response]);
         } catch (\Throwable $e) {
             $this->forward('error', 'internalServerError', [$e]);
         }

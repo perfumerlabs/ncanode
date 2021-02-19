@@ -10,4 +10,5 @@ return [
     'error.parameter_must_be_set' => 'parameter must be set',
     'error.id_code_tags_must_be_set' => 'ID, code or tags parameter must be set',
     'error.signature_not_found' => 'Signature was not found',
+    'error.signature_code_exists' => 'Signature with same code already exists',
 ];
