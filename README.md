@@ -52,7 +52,7 @@ Parameters (json):
 - xml [string,optional] - XML-sign
 - iin [string,optional] - IIN
 - bin [string,optional] - BIN
-- rule [string,required] - Rule for validating. One of ['iin', 'bin', 'auth', 'individual', 'employee', 'ceo', 'organisation']
+- rule [string,required] - rule for validating. One of ['iin', 'bin', 'auth', 'individual', 'employee', 'ceo', 'organisation']
 </p>
 <p>
 
@@ -76,7 +76,7 @@ Success response:
 <p>
 
 Parameters (json):
-- method [string,required] - Method. Ex. 'XML.sign'
+- method [string,required] - method. Ex. 'XML.sign'
 - version [string,optional] - ncanode api version. Default '1.0'
 - params [array,optional] - array of params
 </p>
@@ -106,10 +106,10 @@ Success response:
 
 Parameters (json). Provide id, parent or (document, chain, stage):
 - id [integer,optional] - ID of signature
-- parent [integer,optional] - Parent ID of signature
-- document [string,optional] - Sign document
-- chain [string,optional] - Chain of signature
-- stage [string,optional] - Stage of signature
+- parent [integer,optional] - parent ID of signature
+- document [string,optional] - sign document
+- chain [string,optional] - chain of signature
+- stage [string,optional] - stage of signature
 </p>
 
 <p>
