@@ -62,4 +62,8 @@ if [ $DEV = 'true' ]; then
   && cp propel.example.php propel.php
 fi
 
+set -x \
+&& cd /opt/ncanode \
+&& sudo -u ncanode php cli framework propel/migrate
+
 touch /node_status_inited
