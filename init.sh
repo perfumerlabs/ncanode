@@ -24,6 +24,8 @@ sed -i "s/listen.owner = www-data/listen.owner = ncanode/g" /etc/php/7.4/fpm/poo
 sed -i "s/listen.group = www-data/listen.group = ncanode/g" /etc/php/7.4/fpm/pool.d/www.conf
 sed -i "s/;catch_workers_output = yes/catch_workers_output = yes/g" /etc/php/7.4/fpm/pool.d/www.conf
 
+NCANODE_TIMEZONE_SED=${NCANODE_TIMEZONE//\//\\\/}
+NCANODE_TIMEZONE_SED=${NCANODE_TIMEZONE_SED//\./\\\.}
 NCANODE_REMOTE_URL_SED=${NCANODE_REMOTE_URL//\//\\\/}
 NCANODE_REMOTE_URL_SED=${NCANODE_REMOTE_URL_SED//\./\\\.}
 NCANODE_KEY_SED=${NCANODE_KEY//\//\\\/}
@@ -40,7 +42,7 @@ if [ $DEV != 'true' ]; then
   sed -i "s/\$this->addResources(__DIR__ \. '\/\.\.\/env\.php');//g" /opt/ncanode/src/Application.php
   sed -i "s/NCANODE_KEY/$NCANODE_KEY_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/NCANODE_PWD/$NCANODE_PWD_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
-  sed -i "s/NCANODE_TIMEZONE/$NCANODE_TIMEZONE/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/NCANODE_TIMEZONE/$NCANODE_TIMEZONE_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_HOST/$PG_HOST_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_PORT/$PG_PORT/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_DATABASE/$PG_DATABASE/g" /opt/ncanode/src/Resource/config/resources_shared.php
