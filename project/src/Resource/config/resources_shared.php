@@ -21,6 +21,7 @@ return [
         'key' => 'NCANODE_KEY',
         'pwd' => 'NCANODE_PWD',
         'dummy' => 'NCANODE_DUMMY',
+        'timezone' => 'NCANODE_TIMEZONE',
     ],
 
     '_translator' => [
