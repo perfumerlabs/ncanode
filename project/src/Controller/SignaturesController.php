@@ -10,28 +10,31 @@ class SignaturesController extends LayoutController
 {
     public function get()
     {
-        $parent = $this->f('parent');
+        $document = $this->f('document');
+        $chain = $this->f('chain');
+        $stage = $this->f('stage');
         $tags   = $this->f('tags');
         $limit  = (int) $this->f('limit');
         $offset = (int) $this->f('offset');
         $count  = (bool) $this->f('count');
 
         $objs = SignatureQuery::create()
+            ->leftJoinSignatureTag()
+            ->useSignatureTagQuery()
+            ->leftJoinTag()
+            ->endUse()
             ->orderByCreatedAt(Criteria::DESC);
 
-        if ($parent) {
-            $parent_obj = null;
+        if ($document) {
+            $objs = $objs->filterByDocument($document);
+        }
 
-            if (is_int($parent)) {
-                $parent_obj = SignatureQuery::create()
-                    ->findPk($parent);
-            } elseif (is_string($parent)) {
-                $parent_obj = SignatureQuery::create()
-                    ->findOneByCode($parent);
-            }
+        if ($chain) {
+            $objs = $objs->filterByChain($chain);
+        }
 
-            $objs = $objs
-                ->filterByParent($parent_obj);
+        if ($stage) {
+            $objs = $objs->filterByStage($stage);
         }
 
         if ($tags) {
@@ -40,7 +43,11 @@ class SignaturesController extends LayoutController
             }
 
             $objs = $objs
-                ->filterByTags($tags, Criteria::CONTAINS_SOME);
+                ->useSignatureTagQuery()
+                ->useTagQuery()
+                ->filterByCode($tags)
+                ->endUse()
+                ->endUse();
         }
 
         if ($count) {

@@ -3,6 +3,7 @@
 namespace Ncanode\Controller;
 
 use Ncanode\Domain\SignatureDomain;
+use Ncanode\Domain\TagDomain;
 use Ncanode\Model\Map\SignatureTableMap;
 use Ncanode\Model\SignatureQuery;
 use Ncanode\Repository\SignatureRepository;
@@ -13,37 +14,49 @@ class SignatureController extends LayoutController
 {
     public function get()
     {
-        $id   = (int) $this->f('id');
-        $code = $this->f('code');
-        $tags = $this->f('tags');
+        $id       = (int) $this->f('id');
+        $parent   = (int) $this->f('parent');
+        $document = $this->f('document');
+        $chain    = $this->f('chain');
+        $stage    = $this->f('stage');
 
-        if (!$id && !$code && !$tags) {
-            $this->forward('error', 'badRequest', [$this->t('error.id_code_tags_must_be_set')]);
+        if (!$id && !$parent && !$document) {
+            $this->forward(
+                'error',
+                'badRequest',
+                ['ID, parent, document. ' . $this->t('error.one_of_parameters_must_be_set')]
+            );
         }
 
-        $obj = null;
+        $obj = SignatureQuery::create()
+            ->leftJoinSignatureTag()
+            ->useSignatureTagQuery()
+            ->leftJoinTag()
+            ->endUse();
+
+        if ($document) {
+            $obj = $obj
+                ->filterByDocument($document)
+                ->_if($chain)
+                ->filterByChain($chain)
+                ->_endif()
+                ->_if($stage)
+                ->filterByStage($stage)
+                ->_endif()
+                ->filterByCreatedAt(Criteria::DESC);
+        }
+
+        if ($parent) {
+            $obj = $obj
+                ->filterByParentId($parent);
+        }
 
         if ($id) {
-            $obj = SignatureQuery::create()
-                ->findPk($id);
+            $obj = $obj
+                ->filterById($id);
         }
 
-        if ($code) {
-            $obj = SignatureQuery::create()
-                ->findOneByCode($code);
-        }
-
-        //find last signature by tags
-        if ($tags) {
-            if (!is_array($tags)) {
-                $tags = [$tags];
-            }
-
-            $obj = SignatureQuery::create()
-                ->filterByTags($tags, Criteria::CONTAINS_ALL)
-                ->orderByCreatedAt(Criteria::DESC)
-                ->findOne();
-        }
+        $obj = $obj->findOne();
 
         if (!$obj) {
             $this->forward('error', 'badRequest', [$this->t('error.signature_not_found')]);
@@ -52,79 +65,82 @@ class SignatureController extends LayoutController
         /** @var SignatureRepository $repository */
         $repository = $this->s('ncanode.repository.signature');
 
-        $this->setContent(
-            [
-                'signature' => $repository->format($obj),
-            ]
-        );
+        $this->setContent(['signature' => $repository->format($obj)]);
     }
 
     public function post()
     {
-        $code      = $this->f('code');
-        $parent    = $this->f('parent');
+        $document  = $this->f('document');
+        $chain     = $this->f('chain');
+        $stage     = $this->f('stage');
+        $parent    = (int) $this->f('parent');
         $signature = $this->f('signature');
         $tags      = $this->f('tags');
 
-        $this->validateNotEmpty($code, 'code');
+        $this->validateNotEmpty($document, 'document');
         $this->validateNotEmpty($signature, 'signature');
 
         $exist_obj = SignatureQuery::create()
-            ->filterByCode($code)
+            ->filterByDocument($document)
+            ->_if($chain)
+            ->filterByChain($chain)
+            ->_endif()
+            ->_if($stage)
+            ->filterByStage($stage)
+            ->_endif()
             ->exists();
 
         if ($exist_obj) {
-            $this->forward('error', 'badRequest', [$this->t('error.signature_code_exists')]);
+            $this->forward('error', 'badRequest', [$this->t('error.same_signature_exists')]);
+        }
+
+        $parent_obj = null;
+
+        if ($parent) {
+            $parent_obj = SignatureQuery::create()
+                ->findPk($parent);
+
+            if (!$parent_obj) {
+                $this->forward('error', 'badRequest', [$this->t('error.signature_code_exists')]);
+            }
         }
 
         /** @var SignatureDomain $domain */
         $domain = $this->s('ncanode.domain.signature');
 
-        $con = Propel::getConnection(SignatureTableMap::DATABASE_NAME);
-        $con->beginTransaction();
-
-        try {
-            $domain->save(
-                [
-                    'code'      => $code,
-                    'parent'    => $parent,
-                    'signature' => $signature,
-                    'tags'      => $tags,
-                ]
-            );
-
-            $con->commit();
-        } catch (\Throwable $e) {
-            $con->rollBack();
-        }
-    }
-
-    public function patch()
-    {
-        $id        = $this->f('id');
-        $code      = $this->f('code');
-        $parent    = $this->f('parent');
-        $signature = $this->f('signature');
-        $tags      = $this->f('tags');
-
-        $this->validateNotEmpty($id, 'id');
-
-        /** @var SignatureDomain $domain */
-        $domain = $this->s('ncanode.domain.signature');
+        /** @var TagDomain $tag_domain */
+        $tag_domain = $this->s('ncanode.domain.tag');
 
         $con = Propel::getConnection(SignatureTableMap::DATABASE_NAME);
         $con->beginTransaction();
 
         try {
-            $domain->save(
+            $obj = $domain->save(
                 [
-                    'id'        => $id,
-                    'code'      => $code,
-                    'parent'    => $parent,
+                    'document'  => $document,
+                    'chain'     => $chain,
+                    'stage'     => $stage,
+                    'parent'    => $parent_obj,
                     'signature' => $signature,
-                    'tags'      => $tags,
                 ]
             );
+
+            if ($obj && $tags) {
+                if (!is_array($tags)) {
+                    $tags = [$tags];
+                }
+
+                foreach ($tags as $tag) {
+                    if (!is_string($tag)) {
+                        continue;
+                    }
+
+                    $tag_obj = $tag_domain->save(['code' => $tag]);
+                    if ($tag_obj) {
+                        $domain->addTag($obj, $tag_obj);
+                    }
+                }
+            }
 
             $con->commit();
         } catch (\Throwable $e) {

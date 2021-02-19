@@ -77,8 +77,8 @@ Success response:
 
 Parameters (json):
 - method [string,required] - Method. Ex. 'XML.sign'
-- version [string, optional] - ncanode api version. Default '1.0'
-- params [array, optional] - array of params
+- version [string,optional] - ncanode api version. Default '1.0'
+- params [array,optional] - array of params
 </p>
 
 <p>
@@ -104,8 +104,12 @@ Success response:
 <summary><code>GET /signature</code> - get signature</summary>
 <p>
 
-Parameters (json):
-- code [string,required] - code of signature
+Parameters (json). Provide id, parent or (document, chain, stage):
+- id [integer,optional] - ID of signature
+- parent [integer,optional] - Parent ID of signature
+- document [string,optional] - Sign document
+- chain [string,optional] - Chain of signature
+- stage [string,optional] - Stage of signature
 </p>
 
 <p>
@@ -118,13 +122,14 @@ Success response:
   "content": {
     "signature": {
       "id": 1,
-      "code": "ticket_12",
+      "document": "doc_12",
+      "chain": "ticket_42",
+      "stage": "stage_1",
       "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
       "parent": null,
       "tags": [
-        "ticket_12",
         "customer_1",
-        "bp_service"
+        "process_1"
       ],
       "created_at": "2021-02-18 15:00:00",
       "updated_at": "2021-02-18 15:00:00"
@@ -140,9 +145,11 @@ Success response:
 <p>
 
 Parameters (json):
-- code [string,required] - code of signature
+- document [string,required] - sign document
+- chain [string,optional] - chain of signature
+- stage [string,optional] - stage of signature
 - signature [string, required] - CMS or XML of signed data
-- parent [string,optional] - code of parent signature
+- parent [int,optional] - ID of parent signature
 - tags [array, optional] - array of tags
 </p>
 
@@ -156,13 +163,14 @@ Success response:
   "content": {
     "signature": {
       "id": 2,
-      "code": "ticket_13",
+      "document": "doc_12",
+      "chain": "ticket_42",
+      "stage": "stage_1",
       "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
       "parent": null,
       "tags": [
-        "ticket_13",
         "customer_1",
-        "bp_service"
+        "process_1"
       ],
       "created_at": "2021-02-18 15:00:00",
       "updated_at": "2021-02-18 15:00:00"
@@ -178,11 +186,13 @@ Success response:
 <p>
 
 Parameters (json):
-- parent [string,optional] - code of parent signature
-- tags [array, optional] - array of tags
-- limit [integer, optional] - limit of fetching data
-- offset [integer, optional] - offset of fetching data
-- count [bool, optional] - show total count?
+- document [string,optional] - sign document
+- chain [string,optional] - chain of signature
+- stage [string,optional] - stage of signature
+- tags [array,optional] - array of tags
+- limit [integer,optional] - limit of fetching data
+- offset [integer,optional] - offset of fetching data
+- count [bool,optional] - show total count?
 </p>
 
 <p>
@@ -196,26 +206,28 @@ Success response:
     "signatures": [
       {
         "id": 2,
-        "code": "ticket_13",
+        "document": "doc_12",
+        "chain": "ticket_42",
+        "stage": "stage_1",
         "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
         "parent": null,
         "tags": [
-          "ticket_13",
           "customer_1",
-          "bp_service"
+          "process_1"
         ],
         "created_at": "2021-02-18 15:00:00",
         "updated_at": "2021-02-18 15:00:00"
       },
       {
         "id": 1,
-        "code": "ticket_12",
+        "document": "doc_12",
+        "chain": "ticket_42",
+        "stage": "stage_1",
         "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
         "parent": null,
         "tags": [
-          "ticket_12",
           "customer_1",
-          "bp_service"
+          "process_1"
         ],
         "created_at": "2021-02-18 15:00:00",
         "updated_at": "2021-02-18 15:00:00"

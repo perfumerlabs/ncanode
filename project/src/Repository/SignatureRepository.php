@@ -12,12 +12,20 @@ class SignatureRepository
             return null;
         }
 
+        $tags = [];
+
+        foreach ($obj->getSignatureTags() as $signature_tag) {
+            $tags[] = $signature_tag->getTag()->getCode();
+        }
+
         return [
             'id'         => $obj->getId(),
-            'code'       => $obj->getCode(),
+            'document'   => $obj->getDocument(),
+            'chain'      => $obj->getChain(),
+            'stage'      => $obj->getStage(),
             'parent'     => $this->format($obj->getParent()),
             'signature'  => $obj->getSignature(),
-            'tags'       => $obj->getTags(),
+            'tags'       => $tags,
             'created_at' => $obj->getCreatedAt('Y-m-d H:i:s'),
             'updated_at' => $obj->getUpdatedAt('Y-m-d H:i:s'),
         ];

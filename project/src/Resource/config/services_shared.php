@@ -21,6 +21,11 @@ return [
         'class' => 'Ncanode\\Domain\\SignatureDomain',
     ],
 
+    'ncanode.domain.tag' => [
+        'shared' => true,
+        'class' => 'Ncanode\\Domain\\TagDomain',
+    ],
+
     'ncanode.repository.signature' => [
         'shared' => true,
         'class' => 'Ncanode\\Repository\\SignatureRepository',

@@ -21,18 +21,20 @@ use Propel\Runtime\Exception\PropelException;
  *
  *
  * @method     ChildSignatureQuery orderById($order = Criteria::ASC) Order by the id column
- * @method     ChildSignatureQuery orderByCode($order = Criteria::ASC) Order by the code column
+ * @method     ChildSignatureQuery orderByDocument($order = Criteria::ASC) Order by the document column
+ * @method     ChildSignatureQuery orderByChain($order = Criteria::ASC) Order by the chain column
+ * @method     ChildSignatureQuery orderByStage($order = Criteria::ASC) Order by the stage column
  * @method     ChildSignatureQuery orderByParentId($order = Criteria::ASC) Order by the parent_id column
  * @method     ChildSignatureQuery orderBySignature($order = Criteria::ASC) Order by the signature column
- * @method     ChildSignatureQuery orderByTags($order = Criteria::ASC) Order by the tags column
  * @method     ChildSignatureQuery orderByCreatedAt($order = Criteria::ASC) Order by the created_at column
  * @method     ChildSignatureQuery orderByUpdatedAt($order = Criteria::ASC) Order by the updated_at column
  *
  * @method     ChildSignatureQuery groupById() Group by the id column
- * @method     ChildSignatureQuery groupByCode() Group by the code column
+ * @method     ChildSignatureQuery groupByDocument() Group by the document column
+ * @method     ChildSignatureQuery groupByChain() Group by the chain column
+ * @method     ChildSignatureQuery groupByStage() Group by the stage column
  * @method     ChildSignatureQuery groupByParentId() Group by the parent_id column
  * @method     ChildSignatureQuery groupBySignature() Group by the signature column
- * @method     ChildSignatureQuery groupByTags() Group by the tags column
  * @method     ChildSignatureQuery groupByCreatedAt() Group by the created_at column
  * @method     ChildSignatureQuery groupByUpdatedAt() Group by the updated_at column
  *
@@ -64,16 +66,27 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildSignatureQuery rightJoinWithSignatureRelatedById() Adds a RIGHT JOIN clause and with to the query using the SignatureRelatedById relation
  * @method     ChildSignatureQuery innerJoinWithSignatureRelatedById() Adds a INNER JOIN clause and with to the query using the SignatureRelatedById relation
  *
- * @method     \Ncanode\Model\SignatureQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     ChildSignatureQuery leftJoinSignatureTag($relationAlias = null) Adds a LEFT JOIN clause to the query using the SignatureTag relation
+ * @method     ChildSignatureQuery rightJoinSignatureTag($relationAlias = null) Adds a RIGHT JOIN clause to the query using the SignatureTag relation
+ * @method     ChildSignatureQuery innerJoinSignatureTag($relationAlias = null) Adds a INNER JOIN clause to the query using the SignatureTag relation
+ *
+ * @method     ChildSignatureQuery joinWithSignatureTag($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the SignatureTag relation
+ *
+ * @method     ChildSignatureQuery leftJoinWithSignatureTag() Adds a LEFT JOIN clause and with to the query using the SignatureTag relation
+ * @method     ChildSignatureQuery rightJoinWithSignatureTag() Adds a RIGHT JOIN clause and with to the query using the SignatureTag relation
+ * @method     ChildSignatureQuery innerJoinWithSignatureTag() Adds a INNER JOIN clause and with to the query using the SignatureTag relation
+ *
+ * @method     \Ncanode\Model\SignatureQuery|\Ncanode\Model\SignatureTagQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildSignature|null findOne(ConnectionInterface $con = null) Return the first ChildSignature matching the query
  * @method     ChildSignature findOneOrCreate(ConnectionInterface $con = null) Return the first ChildSignature matching the query, or a new ChildSignature object populated from the query conditions when no match is found
  *
  * @method     ChildSignature|null findOneById(int $id) Return the first ChildSignature filtered by the id column
- * @method     ChildSignature|null findOneByCode(string $code) Return the first ChildSignature filtered by the code column
+ * @method     ChildSignature|null findOneByDocument(string $document) Return the first ChildSignature filtered by the document column
+ * @method     ChildSignature|null findOneByChain(string $chain) Return the first ChildSignature filtered by the chain column
+ * @method     ChildSignature|null findOneByStage(string $stage) Return the first ChildSignature filtered by the stage column
  * @method     ChildSignature|null findOneByParentId(int $parent_id) Return the first ChildSignature filtered by the parent_id column
  * @method     ChildSignature|null findOneBySignature(string $signature) Return the first ChildSignature filtered by the signature column
- * @method     ChildSignature|null findOneByTags(array $tags) Return the first ChildSignature filtered by the tags column
  * @method     ChildSignature|null findOneByCreatedAt(string $created_at) Return the first ChildSignature filtered by the created_at column
  * @method     ChildSignature|null findOneByUpdatedAt(string $updated_at) Return the first ChildSignature filtered by the updated_at column *
 
@@ -81,19 +94,21 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildSignature requireOne(ConnectionInterface $con = null) Return the first ChildSignature matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildSignature requireOneById(int $id) Return the first ChildSignature filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildSignature requireOneByCode(string $code) Return the first ChildSignature filtered by the code column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildSignature requireOneByDocument(string $document) Return the first ChildSignature filtered by the document column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildSignature requireOneByChain(string $chain) Return the first ChildSignature filtered by the chain column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildSignature requireOneByStage(string $stage) Return the first ChildSignature filtered by the stage column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSignature requireOneByParentId(int $parent_id) Return the first ChildSignature filtered by the parent_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSignature requireOneBySignature(string $signature) Return the first ChildSignature filtered by the signature column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildSignature requireOneByTags(array $tags) Return the first ChildSignature filtered by the tags column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSignature requireOneByCreatedAt(string $created_at) Return the first ChildSignature filtered by the created_at column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSignature requireOneByUpdatedAt(string $updated_at) Return the first ChildSignature filtered by the updated_at column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildSignature[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildSignature objects based on current ModelCriteria
  * @method     ChildSignature[]|ObjectCollection findById(int $id) Return ChildSignature objects filtered by the id column
- * @method     ChildSignature[]|ObjectCollection findByCode(string $code) Return ChildSignature objects filtered by the code column
+ * @method     ChildSignature[]|ObjectCollection findByDocument(string $document) Return ChildSignature objects filtered by the document column
+ * @method     ChildSignature[]|ObjectCollection findByChain(string $chain) Return ChildSignature objects filtered by the chain column
+ * @method     ChildSignature[]|ObjectCollection findByStage(string $stage) Return ChildSignature objects filtered by the stage column
  * @method     ChildSignature[]|ObjectCollection findByParentId(int $parent_id) Return ChildSignature objects filtered by the parent_id column
  * @method     ChildSignature[]|ObjectCollection findBySignature(string $signature) Return ChildSignature objects filtered by the signature column
- * @method     ChildSignature[]|ObjectCollection findByTags(array $tags) Return ChildSignature objects filtered by the tags column
  * @method     ChildSignature[]|ObjectCollection findByCreatedAt(string $created_at) Return ChildSignature objects filtered by the created_at column
  * @method     ChildSignature[]|ObjectCollection findByUpdatedAt(string $updated_at) Return ChildSignature objects filtered by the updated_at column
  * @method     ChildSignature[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -194,7 +209,7 @@ abstract class SignatureQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, code, parent_id, signature, tags, created_at, updated_at FROM ncanode_signature WHERE id = :p0';
+        $sql = 'SELECT id, document, chain, stage, parent_id, signature, created_at, updated_at FROM ncanode_signature WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -326,28 +341,78 @@ abstract class SignatureQuery extends ModelCriteria
     }
 
     /**
-     * Filter the query on the code column
+     * Filter the query on the document column
      *
      * Example usage:
      * <code>
-     * $query->filterByCode('fooValue');   // WHERE code = 'fooValue'
-     * $query->filterByCode('%fooValue%', Criteria::LIKE); // WHERE code LIKE '%fooValue%'
+     * $query->filterByDocument('fooValue');   // WHERE document = 'fooValue'
+     * $query->filterByDocument('%fooValue%', Criteria::LIKE); // WHERE document LIKE '%fooValue%'
      * </code>
      *
-     * @param     string $code The value to use as filter.
+     * @param     string $document The value to use as filter.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this|ChildSignatureQuery The current query, for fluid interface
      */
-    public function filterByCode($code = null, $comparison = null)
+    public function filterByDocument($document = null, $comparison = null)
     {
         if (null === $comparison) {
-            if (is_array($code)) {
+            if (is_array($document)) {
                 $comparison = Criteria::IN;
             }
         }
 
-        return $this->addUsingAlias(SignatureTableMap::COL_CODE, $code, $comparison);
+        return $this->addUsingAlias(SignatureTableMap::COL_DOCUMENT, $document, $comparison);
+    }
+
+    /**
+     * Filter the query on the chain column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByChain('fooValue');   // WHERE chain = 'fooValue'
+     * $query->filterByChain('%fooValue%', Criteria::LIKE); // WHERE chain LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $chain The value to use as filter.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildSignatureQuery The current query, for fluid interface
+     */
+    public function filterByChain($chain = null, $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($chain)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(SignatureTableMap::COL_CHAIN, $chain, $comparison);
+    }
+
+    /**
+     * Filter the query on the stage column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByStage('fooValue');   // WHERE stage = 'fooValue'
+     * $query->filterByStage('%fooValue%', Criteria::LIKE); // WHERE stage LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $stage The value to use as filter.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildSignatureQuery The current query, for fluid interface
+     */
+    public function filterByStage($stage = null, $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($stage)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(SignatureTableMap::COL_STAGE, $stage, $comparison);
     }
 
     /**
@@ -416,87 +481,6 @@ abstract class SignatureQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(SignatureTableMap::COL_SIGNATURE, $signature, $comparison);
-    }
-
-    /**
-     * Filter the query on the tags column
-     *
-     * @param     array $tags The values to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this|ChildSignatureQuery The current query, for fluid interface
-     */
-    public function filterByTags($tags = null, $comparison = null)
-    {
-        $key = $this->getAliasedColName(SignatureTableMap::COL_TAGS);
-        if (null === $comparison || $comparison == Criteria::CONTAINS_ALL) {
-            foreach ($tags as $value) {
-                $value = '%| ' . $value . ' |%';
-                if ($this->containsKey($key)) {
-                    $this->addAnd($key, $value, Criteria::LIKE);
-                } else {
-                    $this->add($key, $value, Criteria::LIKE);
-                }
-            }
-
-            return $this;
-        } elseif ($comparison == Criteria::CONTAINS_SOME) {
-            foreach ($tags as $value) {
-                $value = '%| ' . $value . ' |%';
-                if ($this->containsKey($key)) {
-                    $this->addOr($key, $value, Criteria::LIKE);
-                } else {
-                    $this->add($key, $value, Criteria::LIKE);
-                }
-            }
-
-            return $this;
-        } elseif ($comparison == Criteria::CONTAINS_NONE) {
-            foreach ($tags as $value) {
-                $value = '%| ' . $value . ' |%';
-                if ($this->containsKey($key)) {
-                    $this->addAnd($key, $value, Criteria::NOT_LIKE);
-                } else {
-                    $this->add($key, $value, Criteria::NOT_LIKE);
-                }
-            }
-            $this->addOr($key, null, Criteria::ISNULL);
-
-            return $this;
-        }
-
-        return $this->addUsingAlias(SignatureTableMap::COL_TAGS, $tags, $comparison);
-    }
-
-    /**
-     * Filter the query on the tags column
-     * @param     mixed $tags The value to use as filter
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::CONTAINS_ALL
-     *
-     * @return $this|ChildSignatureQuery The current query, for fluid interface
-     */
-    public function filterByTag($tags = null, $comparison = null)
-    {
-        if (null === $comparison || $comparison == Criteria::CONTAINS_ALL) {
-            if (is_scalar($tags)) {
-                $tags = '%| ' . $tags . ' |%';
-                $comparison = Criteria::LIKE;
-            }
-        } elseif ($comparison == Criteria::CONTAINS_NONE) {
-            $tags = '%| ' . $tags . ' |%';
-            $comparison = Criteria::NOT_LIKE;
-            $key = $this->getAliasedColName(SignatureTableMap::COL_TAGS);
-            if ($this->containsKey($key)) {
-                $this->addAnd($key, $tags, $comparison);
-            } else {
-                $this->addAnd($key, $tags, $comparison);
-            }
-            $this->addOr($key, null, Criteria::ISNULL);
-
-            return $this;
-        }
-
-        return $this->addUsingAlias(SignatureTableMap::COL_TAGS, $tags, $comparison);
     }
 
     /**
@@ -733,6 +717,79 @@ abstract class SignatureQuery extends ModelCriteria
         return $this
             ->joinSignatureRelatedById($relationAlias, $joinType)
             ->useQuery($relationAlias ? $relationAlias : 'SignatureRelatedById', '\Ncanode\Model\SignatureQuery');
+    }
+
+    /**
+     * Filter the query by a related \Ncanode\Model\SignatureTag object
+     *
+     * @param \Ncanode\Model\SignatureTag|ObjectCollection $signatureTag the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildSignatureQuery The current query, for fluid interface
+     */
+    public function filterBySignatureTag($signatureTag, $comparison = null)
+    {
+        if ($signatureTag instanceof \Ncanode\Model\SignatureTag) {
+            return $this
+                ->addUsingAlias(SignatureTableMap::COL_ID, $signatureTag->getSignatureId(), $comparison);
+        } elseif ($signatureTag instanceof ObjectCollection) {
+            return $this
+                ->useSignatureTagQuery()
+                ->filterByPrimaryKeys($signatureTag->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterBySignatureTag() only accepts arguments of type \Ncanode\Model\SignatureTag or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the SignatureTag relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSignatureQuery The current query, for fluid interface
+     */
+    public function joinSignatureTag($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('SignatureTag');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'SignatureTag');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the SignatureTag relation SignatureTag object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Ncanode\Model\SignatureTagQuery A secondary query class using the current class as primary query
+     */
+    public function useSignatureTagQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinSignatureTag($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'SignatureTag', '\Ncanode\Model\SignatureTagQuery');
     }
 
     /**

@@ -19,7 +19,7 @@ class OriginController extends LayoutController
         $key = $this->getContainer()->getParam('ncanode/key');
         $pwd = $this->getContainer()->getParam('ncanode/pwd');
 
-        if ($key && $pwd) {
+        if ($key && $pwd && $key !== 'NCANODE_KEY') {
             $key = file_get_contents($key);
 
             if (!$key) {
