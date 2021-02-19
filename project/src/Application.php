@@ -5,6 +5,7 @@ namespace Project;
 use Ncanode\Module\CommandModule;
 use Ncanode\Module\ControllerModule;
 use Perfumer\Package\Framework\Module\HttpModule;
+use Perfumer\Package\Framework\Module\ConsoleModule;
 
 class Application extends \Perfumer\Framework\Application\Application
 {
@@ -18,8 +19,11 @@ class Application extends \Perfumer\Framework\Application\Application
         $this->addDefinitions(__DIR__ . '/../src/Resource/config/services_cli.php',  'cli');
         $this->addResources(__DIR__ . '/../src/Resource/config/resources_shared.php');
 
+        $this->addResources(__DIR__ . '/../env.php');
+
         $this->addModule(new HttpModule(),       'http');
         $this->addModule(new ControllerModule(), 'http');
+        $this->addModule(new ConsoleModule(),    'cli');
         $this->addModule(new CommandModule(),    'cli');
     }
 
@@ -30,5 +34,6 @@ class Application extends \Perfumer\Framework\Application\Application
 
     protected function after(): void
     {
+        $this->container->get('propel.service_container');
     }
 }

@@ -52,7 +52,7 @@ Parameters (json):
 - xml [string,optional] - XML-sign
 - iin [string,optional] - IIN
 - bin [string,optional] - BIN
-- rule [string,required] - Rule for validating. One of ['iin', 'bin', 'auth', 'individual', 'employee', 'ceo', 'organisation']
+- rule [string,required] - rule for validating. One of ['iin', 'bin', 'auth', 'individual', 'employee', 'ceo', 'organisation']
 </p>
 <p>
 
@@ -62,7 +62,9 @@ Success response:
   "status": true,
   "message": null,
   "content": {
-    "result": true
+    "validate": {
+      "result": true
+    }
   }
 }
 ```
@@ -74,9 +76,9 @@ Success response:
 <p>
 
 Parameters (json):
-- method [string,required] - Method. Ex. 'XML.sign'
-- version [string, optional] - ncanode api version. Default '1.0'
-- params [array, optional] - array of params
+- method [string,required] - method. Ex. 'XML.sign'
+- version [string,optional] - ncanode api version. Default '1.0'
+- params [array,optional] - array of params
 </p>
 
 <p>
@@ -87,8 +89,10 @@ Success response:
   "status": true,
   "message": null,
   "content": {
-    "result": {
-      "xml": "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?><root><name>NCANode</name><ds:Signature xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">\r\n<ds:SignedInfo>\r\n<ds:CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315\"/>\r\n<ds:SignatureMethod Algorithm=\"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256\"/>\r\n<ds:Reference URI=\"\">\r\n<ds:Transforms>\r\n<ds:Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\"/>\r\n<ds:Transform Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/>\r\n</ds:Transforms>\r\n<ds:DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\"/>\r\n<ds:DigestValue>ybvg7uzrmIoa6Q02yU8BiLjYNl64fr+yXCtg0kHwdv4=</ds:DigestValue>\r\n</ds:Reference>\r\n</ds:SignedInfo>\r\n<ds:SignatureValue>\r\niSO1UrZLWBsiMAybQEkgvz7VgGjfmixA==\r\n</ds:SignatureValue>\r\n<ds:KeyInfo>\r\n<ds:X509Data>\r\n<ds:X509Certificate>\r\nLCt2q\r\n</ds:X509Certificate>\r\n</ds:X509Data>\r\n</ds:KeyInfo>\r\n</ds:Signature></root>"
+    "origin": {
+      "result": {
+        "xml": "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?><root><name>NCANode</name><ds:Signature xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">\r\n<ds:SignedInfo>\r\n<ds:CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315\"/>\r\n<ds:SignatureMethod Algorithm=\"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256\"/>\r\n<ds:Reference URI=\"\">\r\n<ds:Transforms>\r\n<ds:Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\"/>\r\n<ds:Transform Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/>\r\n</ds:Transforms>\r\n<ds:DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\"/>\r\n<ds:DigestValue>ybvg7uzrmIoa6Q02yU8BiLjYNl64fr+yXCtg0kHwdv4=</ds:DigestValue>\r\n</ds:Reference>\r\n</ds:SignedInfo>\r\n<ds:SignatureValue>\r\niSO1UrZLWBsiMAybQEkgvz7VgGjfmixA==\r\n</ds:SignatureValue>\r\n<ds:KeyInfo>\r\n<ds:X509Data>\r\n<ds:X509Certificate>\r\nLCt2q\r\n</ds:X509Certificate>\r\n</ds:X509Data>\r\n</ds:KeyInfo>\r\n</ds:Signature></root>"
+      }
     }
   }
 }
@@ -100,8 +104,12 @@ Success response:
 <summary><code>GET /signature</code> - get signature</summary>
 <p>
 
-Parameters (json):
-- code [string,required] - code of signature
+Parameters (json). Provide id, parent or (document, chain, stage):
+- id [integer,optional] - ID of signature
+- parent [integer,optional] - parent ID of signature
+- document [string,optional] - sign document
+- chain [string,optional] - chain of signature
+- stage [string,optional] - stage of signature
 </p>
 
 <p>
@@ -114,10 +122,17 @@ Success response:
   "content": {
     "signature": {
       "id": 1,
-      "code": "ticket_12",
+      "document": "doc_12",
+      "chain": "ticket_42",
+      "stage": "stage_1",
       "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
-      "parent_id": null,
-      "created_at": ""
+      "parent": null,
+      "tags": [
+        "customer_1",
+        "process_1"
+      ],
+      "created_at": "2021-02-18 15:00:00",
+      "updated_at": "2021-02-18 15:00:00"
     }
   }
 }
@@ -130,9 +145,11 @@ Success response:
 <p>
 
 Parameters (json):
-- code [string,required] - code of signature
+- document [string,required] - sign document
+- chain [string,optional] - chain of signature
+- stage [string,optional] - stage of signature
 - signature [string, required] - CMS or XML of signed data
-- parent [string,optional] - code of parent signature
+- parent [int,optional] - ID of parent signature
 - tags [array, optional] - array of tags
 </p>
 
@@ -146,10 +163,17 @@ Success response:
   "content": {
     "signature": {
       "id": 2,
-      "code": "ticket_13",
+      "document": "doc_12",
+      "chain": "ticket_42",
+      "stage": "stage_1",
       "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
-      "parent_id": null,
-      "created_at": ""
+      "parent": null,
+      "tags": [
+        "customer_1",
+        "process_1"
+      ],
+      "created_at": "2021-02-18 15:00:00",
+      "updated_at": "2021-02-18 15:00:00"
     }
   }
 }
@@ -162,10 +186,13 @@ Success response:
 <p>
 
 Parameters (json):
-- parent [string,optional] - code of parent signature
-- tags [array, optional] - array of tags
-- limit [integer, optional] - limit of fetching data
-- offset [integer, optional] - offset of fetching data
+- document [string,optional] - sign document
+- chain [string,optional] - chain of signature
+- stage [string,optional] - stage of signature
+- tags [array,optional] - array of tags
+- limit [integer,optional] - limit of fetching data
+- offset [integer,optional] - offset of fetching data
+- count [bool,optional] - show total count?
 </p>
 
 <p>
@@ -179,17 +206,31 @@ Success response:
     "signatures": [
       {
         "id": 2,
-        "code": "ticket_13",
+        "document": "doc_12",
+        "chain": "ticket_42",
+        "stage": "stage_1",
         "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
-        "parent_id": null,
-        "created_at": ""
+        "parent": null,
+        "tags": [
+          "customer_1",
+          "process_1"
+        ],
+        "created_at": "2021-02-18 15:00:00",
+        "updated_at": "2021-02-18 15:00:00"
       },
       {
         "id": 1,
-        "code": "ticket_12",
+        "document": "doc_12",
+        "chain": "ticket_42",
+        "stage": "stage_1",
         "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
-        "parent_id": null,
-        "created_at": ""
+        "parent": null,
+        "tags": [
+          "customer_1",
+          "process_1"
+        ],
+        "created_at": "2021-02-18 15:00:00",
+        "updated_at": "2021-02-18 15:00:00"
       }
     ]
   }

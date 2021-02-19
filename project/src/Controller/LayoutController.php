@@ -17,19 +17,21 @@ class LayoutController extends ViewController
         parent::before();
 
         $api_locale = $this->getExternalRequest()->headers->get('api-locale');
+
         if (!$api_locale) {
             $api_locale = 'ru';
         }
 
         /** @var Translator $translator */
         $translator = $this->s('translator');
+
         $translator->setLocale($api_locale);
     }
 
     protected function validateNotEmpty($var, $name)
     {
         if (!$var) {
-            $this->forward('error', 'badRequest', ["\"$name\" parameter must be set"]);
+            $this->forward('error', 'badRequest', ["\"$name\" " . $this->t('error.parameter_must_be_set')]);
         }
     }
 }

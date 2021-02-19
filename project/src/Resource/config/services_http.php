@@ -6,7 +6,7 @@ return [
         'class' => 'Perfumer\\Framework\\Router\\Http\\DefaultRouter',
         'arguments' => ['#gateway.http', [
             'data_type' => 'json',
-            'allowed_actions' => ['post'],
+            'allowed_actions' => ['get', 'post', 'delete', 'patch'],
         ]]
     ],
 
