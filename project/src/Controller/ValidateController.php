@@ -120,7 +120,7 @@ class ValidateController extends LayoutController
                 }
             }
 
-            $this->setContent(['validate' => $result]);
+            $this->setContent(['validate' => ['result' => $result]]);
         } catch (\Throwable $e) {
             $this->forward('error', 'internalServerError', [$e]);
         }

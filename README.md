@@ -62,7 +62,9 @@ Success response:
   "status": true,
   "message": null,
   "content": {
-    "validate": true
+    "validate": {
+      "result": true
+    }
   }
 }
 ```
