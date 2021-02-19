@@ -11,7 +11,9 @@ if [ "$1" = 'supervisord' ] || [ "$1" = '' ]; then
         fi
     fi
 
-    chown ncanode:ncanode $NCANODE_KEY
+    if [ $NCANODE_KEY != '' ]; then
+        chown ncanode:ncanode $NCANODE_KEY
+    fi
 
     exec /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf $1
 fi
