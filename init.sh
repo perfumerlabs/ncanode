@@ -24,18 +24,35 @@ sed -i "s/listen.owner = www-data/listen.owner = ncanode/g" /etc/php/7.4/fpm/poo
 sed -i "s/listen.group = www-data/listen.group = ncanode/g" /etc/php/7.4/fpm/pool.d/www.conf
 sed -i "s/;catch_workers_output = yes/catch_workers_output = yes/g" /etc/php/7.4/fpm/pool.d/www.conf
 
+NCANODE_TIMEZONE_SED=${NCANODE_TIMEZONE//\//\\\/}
+NCANODE_TIMEZONE_SED=${NCANODE_TIMEZONE_SED//\./\\\.}
 NCANODE_REMOTE_URL_SED=${NCANODE_REMOTE_URL//\//\\\/}
 NCANODE_REMOTE_URL_SED=${NCANODE_REMOTE_URL_SED//\./\\\.}
 NCANODE_KEY_SED=${NCANODE_KEY//\//\\\/}
 NCANODE_KEY_SED=${NCANODE_KEY_SED//\./\\\.}
 NCANODE_PWD_SED=${NCANODE_PWD//\//\\\/}
 NCANODE_PWD_SED=${NCANODE_PWD_SED//\./\\\.}
+PG_HOST_SED=${PG_HOST//\//\\\/}
+PG_HOST_SED=${PG_HOST_SED//\./\\\.}
+PG_PASSWORD_SED=${PG_PASSWORD//\//\\\/}
+PG_PASSWORD_SED=${PG_PASSWORD_SED//\./\\\.}
 
 if [ $DEV != 'true' ]; then
   sed -i "s/NCANODE_REMOTE_URL/$NCANODE_REMOTE_URL_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/\$this->addResources(__DIR__ \. '\/\.\.\/env\.php');//g" /opt/ncanode/src/Application.php
   sed -i "s/NCANODE_KEY/$NCANODE_KEY_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/NCANODE_PWD/$NCANODE_PWD_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/NCANODE_TIMEZONE/$NCANODE_TIMEZONE_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/PG_HOST/$PG_HOST_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/PG_PORT/$PG_PORT/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/PG_DATABASE/$PG_DATABASE/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/PG_USER/$PG_USER/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/PG_PASSWORD/$PG_PASSWORD_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/PG_HOST/$PG_HOST_SED/g" /opt/ncanode/src/Resource/propel/connection/propel.php
+  sed -i "s/PG_PORT/$PG_PORT/g" /opt/ncanode/src/Resource/propel/connection/propel.php
+  sed -i "s/PG_DATABASE/$PG_DATABASE/g" /opt/ncanode/src/Resource/propel/connection/propel.php
+  sed -i "s/PG_USER/$PG_USER/g" /opt/ncanode/src/Resource/propel/connection/propel.php
+  sed -i "s/PG_PASSWORD/$PG_PASSWORD_SED/g" /opt/ncanode/src/Resource/propel/connection/propel.php
 fi
 
 if [ $DEV = 'true' ]; then
@@ -44,5 +61,9 @@ if [ $DEV = 'true' ]; then
   && cp env.example.php env.php \
   && cp propel.example.php propel.php
 fi
+
+set -x \
+&& cd /opt/ncanode \
+&& sudo -u ncanode php cli framework propel/migrate
 
 touch /node_status_inited
