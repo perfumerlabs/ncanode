@@ -43,7 +43,7 @@ class SignatureController extends LayoutController
                 ->_if($stage)
                 ->filterByStage($stage)
                 ->_endif()
-                ->filterByCreatedAt(Criteria::DESC);
+                ->orderByCreatedAt(Criteria::DESC);
         }
 
         if ($parent) {
