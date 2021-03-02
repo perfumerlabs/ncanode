@@ -22,7 +22,7 @@ class ValidateController extends LayoutController
         $xml        = (string) $this->f('xml');
         $iin        = (string) $this->f('iin');
         $bin        = (string) $this->f('bin');
-        $rule       = (string) $this->f('rule');
+        $rules      = $this->f('rule');
         $expiration = (bool) $this->f('expiration', true);
 
         $verify_ocsp = true;
@@ -39,10 +39,6 @@ class ValidateController extends LayoutController
 
         if ($cms && $xml) {
             $this->forward('error', 'badRequest', [$this->t('error.only_cms_or_xml_required')]);
-        }
-
-        if (!in_array($rule, self::RULES)) {
-            $this->forward('error', 'badRequest', [$this->t('error.rules_invalid') . ' ' . implode(', ', self::RULES)]);
         }
 
         /** @var Ncanode $ncanode */
@@ -67,56 +63,74 @@ class ValidateController extends LayoutController
 
             $result = false;
 
-            if ($rule === 'iin') {
-                $this->validateNotEmpty($iin, 'iin');
-
-                if ($cms) {
-                    $sign_iin = $ncanode->getIin($cms, $verify_ocsp, $verify_crl);
-                } else {
-                    $sign_iin = $ncanode->getIinByXml($xml, $verify_ocsp, $verify_crl);
+            foreach ($rules as $rule) {
+                if (!in_array($rule, self::RULES)) {
+                    $this->forward(
+                        'error',
+                        'badRequest',
+                        [$this->t('error.rules_invalid') . ' ' . implode(', ', self::RULES)]
+                    );
                 }
 
-                if ($sign_iin === $iin) {
-                    $result = true;
-                }
-            } elseif ($rule === 'bin') {
-                $this->validateNotEmpty($bin, 'bin');
+                if ($rule === 'iin') {
+                    $this->validateNotEmpty($iin, 'iin');
 
-                if ($cms) {
-                    $sign_bin = $ncanode->getBin($cms);
-                } else {
-                    $sign_bin = $ncanode->getBinByXml($xml);
+                    if ($cms) {
+                        $sign_iin = $ncanode->getIin($cms, $verify_ocsp, $verify_crl);
+                    } else {
+                        $sign_iin = $ncanode->getIinByXml($xml, $verify_ocsp, $verify_crl);
+                    }
+
+                    if ($sign_iin === $iin) {
+                        $result = true;
+                    }
+                } elseif ($rule === 'bin') {
+                    $this->validateNotEmpty($bin, 'bin');
+
+                    if ($cms) {
+                        $sign_bin = $ncanode->getBin($cms);
+                    } else {
+                        $sign_bin = $ncanode->getBinByXml($xml);
+                    }
+
+                    if ($sign_bin === $bin) {
+                        $result = true;
+                    }
+                } elseif ($rule === 'auth') {
+                    $this->validateNotEmpty($cms, 'cms');
+                    $result = $ncanode->isAuthCertificate($cms, $verify_ocsp, $verify_crl);
+                } elseif ($rule === 'sign') {
+                    $this->validateNotEmpty($cms, 'cms');
+                    $result = $ncanode->isSignCertificate($cms, $verify_ocsp, $verify_crl);
+                } elseif ($rule === 'individual') {
+                    if ($cms) {
+                        $result = $ncanode->isIndividual($cms, $verify_ocsp, $verify_crl);
+                    } else {
+                        $result = $ncanode->isIndividualByXml($xml, $verify_ocsp, $verify_crl);
+                    }
+                } elseif ($rule === 'employee') {
+                    if ($cms) {
+                        $result = $ncanode->isEmployee($cms, $verify_ocsp, $verify_crl);
+                    } else {
+                        $result = $ncanode->isEmployeeByXml($xml, $verify_ocsp, $verify_crl);
+                    }
+                } elseif ($rule === 'ceo') {
+                    if ($cms) {
+                        $result = $ncanode->isCeo($cms, $verify_ocsp, $verify_crl);
+                    } else {
+                        $result = $ncanode->isCeoByXml($xml, $verify_ocsp, $verify_crl);
+                    }
+                } elseif ($rule === 'organisation') {
+                    if ($cms) {
+                        $result = $ncanode->isOrganization($cms, $verify_ocsp, $verify_crl);
+                    } else {
+                        $result = $ncanode->isOrganizationByXml($xml, $verify_ocsp, $verify_crl);
+                    }
                 }
 
-                if ($sign_bin === $bin) {
-                    $result = true;
-                }
-            } elseif ($rule === 'auth') {
-                $this->validateNotEmpty($cms, 'cms');
-                $result = $ncanode->isAuthCertificate($cms, $verify_ocsp, $verify_crl);
-            } elseif ($rule === 'individual') {
-                if ($cms) {
-                    $result = $ncanode->isIndividual($cms, $verify_ocsp, $verify_crl);
-                } else {
-                    $result = $ncanode->isIndividualByXml($xml, $verify_ocsp, $verify_crl);
-                }
-            } elseif ($rule === 'employee') {
-                if ($cms) {
-                    $result = $ncanode->isEmployee($cms, $verify_ocsp, $verify_crl);
-                } else {
-                    $result = $ncanode->isEmployeeByXml($xml, $verify_ocsp, $verify_crl);
-                }
-            } elseif ($rule === 'ceo') {
-                if ($cms) {
-                    $result = $ncanode->isCeo($cms, $verify_ocsp, $verify_crl);
-                } else {
-                    $result = $ncanode->isCeoByXml($xml, $verify_ocsp, $verify_crl);
-                }
-            } elseif ($rule === 'organisation') {
-                if ($cms) {
-                    $result = $ncanode->isOrganization($cms, $verify_ocsp, $verify_crl);
-                } else {
-                    $result = $ncanode->isOrganizationByXml($xml, $verify_ocsp, $verify_crl);
+                if (!$result) {
+                    $this->setContent(['validate' => ['result' => false]]);
+                    return;
                 }
             }
 
