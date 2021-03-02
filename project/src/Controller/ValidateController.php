@@ -10,6 +10,7 @@ class ValidateController extends LayoutController
         'iin',
         'bin',
         'auth',
+        'sign',
         'individual',
         'employee',
         'ceo',
@@ -142,13 +143,13 @@ class ValidateController extends LayoutController
 
                 if (!$result) {
                     $this->setContent(['validate' => ['result' => false]]);
-                    return;
                 }
             }
 
             $this->setContent(['validate' => ['result' => $result]]);
         } catch (\Throwable $e) {
-            $this->forward('error', 'internalServerError', [$e]);
+            throw $e;
+//            $this->forward('error', 'internalServerError', [$e]);
         }
     }
 }
