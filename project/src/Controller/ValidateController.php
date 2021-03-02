@@ -25,6 +25,18 @@ class ValidateController extends LayoutController
         $rules      = $this->f('rule');
         $expiration = (bool) $this->f('expiration', true);
 
+        if (!$rules) {
+            $this->forward(
+                'error',
+                'badRequest',
+                [$this->t('error.rules_invalid') . ' ' . implode(', ', self::RULES)]
+            );
+        }
+
+        if (!is_array($rules)) {
+            $rules = [$rules];
+        }
+
         $verify_ocsp = true;
         $verify_crl = true;
 
