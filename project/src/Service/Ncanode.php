@@ -336,6 +336,27 @@ class Ncanode extends NCANodeClient
         return true;
     }
 
+    public function isSignCertificate(string $cms, bool $verifyOcsp = false, bool $verifyCrl = false): bool
+    {
+        if ($this->dummy) {
+            return true;
+        }
+
+        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
+
+        if (!$rawVerifyResult) {
+            return false;
+        }
+
+        $certificateInfo = new CertificateInfo($rawVerifyResult);
+
+        if ($certificateInfo->__get('keyUsage') !== 'SIGN') {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Проверяем валиден ли сертификат по подписи
      *
