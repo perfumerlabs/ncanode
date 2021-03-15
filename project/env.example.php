@@ -6,6 +6,7 @@ return [
         'project'       => 'ncanode',
         'database'      => 'pgsql',
         'dsn'           => 'pgsql:host=db;port=5432;dbname=ncanode',
+        'db_schema'     => 'public',
         'db_user'       => 'postgres',
         'db_password'   => 'postgres',
         'platform'      => 'pgsql',

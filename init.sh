@@ -46,11 +46,13 @@ if [ $DEV != 'true' ]; then
   sed -i "s/PG_HOST/$PG_HOST_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_PORT/$PG_PORT/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_DATABASE/$PG_DATABASE/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/PG_SCHEMA/$PG_SCHEMA/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_USER/$PG_USER/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_PASSWORD/$PG_PASSWORD_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_HOST/$PG_HOST_SED/g" /opt/ncanode/src/Resource/propel/connection/propel.php
   sed -i "s/PG_PORT/$PG_PORT/g" /opt/ncanode/src/Resource/propel/connection/propel.php
   sed -i "s/PG_DATABASE/$PG_DATABASE/g" /opt/ncanode/src/Resource/propel/connection/propel.php
+  sed -i "s/PG_SCHEMA/$PG_SCHEMA/g" /opt/ncanode/src/Resource/propel/connection/propel.php
   sed -i "s/PG_USER/$PG_USER/g" /opt/ncanode/src/Resource/propel/connection/propel.php
   sed -i "s/PG_PASSWORD/$PG_PASSWORD_SED/g" /opt/ncanode/src/Resource/propel/connection/propel.php
 fi

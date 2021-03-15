@@ -54,6 +54,7 @@ RUN set -x\
 ENV PG_HOST postgresql
 ENV PG_PORT 5432
 ENV PG_DATABASE ncanode
+ENV PG_SCHEMA public
 ENV PG_USER postgres
 ENV PG_PASSWORD postgres
 ENV NCANODE_TIMEZONE "Utc"
