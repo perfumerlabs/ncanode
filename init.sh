@@ -32,6 +32,8 @@ NCANODE_KEY_SED=${NCANODE_KEY//\//\\\/}
 NCANODE_KEY_SED=${NCANODE_KEY_SED//\./\\\.}
 NCANODE_PWD_SED=${NCANODE_PWD//\//\\\/}
 NCANODE_PWD_SED=${NCANODE_PWD_SED//\./\\\.}
+PG_REAL_HOST_SED=${PG_REAL_HOST//\//\\\/}
+PG_REAL_HOST_SED=${PG_REAL_HOST_SED//\./\\\.}
 PG_HOST_SED=${PG_HOST//\//\\\/}
 PG_HOST_SED=${PG_HOST_SED//\./\\\.}
 PG_PASSWORD_SED=${PG_PASSWORD//\//\\\/}
@@ -44,6 +46,7 @@ if [ $DEV != 'true' ]; then
   sed -i "s/NCANODE_PWD/$NCANODE_PWD_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/NCANODE_TIMEZONE/$NCANODE_TIMEZONE_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_HOST/$PG_HOST_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
+  sed -i "s/PG_REAL_HOST/$PG_REAL_HOST_SED/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_PORT/$PG_PORT/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_DATABASE/$PG_DATABASE/g" /opt/ncanode/src/Resource/config/resources_shared.php
   sed -i "s/PG_SCHEMA/$PG_SCHEMA/g" /opt/ncanode/src/Resource/config/resources_shared.php
@@ -66,6 +69,6 @@ fi
 
 set -x \
 && cd /opt/ncanode \
-&& sudo -u ncanode php cli framework propel/migrate
+&& sudo -u ncanode php cli ncanode startup
 
 touch /node_status_inited

@@ -16,11 +16,13 @@ return [
         'migration_dir' => 'src/Resource/propel/migration',
         'migration_table' => 'ncanode_propel_migration',
     ],
-    'database' => [
-        'db' => 'ncanode',
+    'pg' => [
+        'real_host' => 'db',
         'host' => 'db',
         'port' => '5432',
-        'username' => 'postgres',
+        'database' => 'ncanode',
+        'schema' => 'public',
+        'user' => 'postgres',
         'password' => 'postgres',
     ],
     'ncanode' => [

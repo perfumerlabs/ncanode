@@ -4,5 +4,5 @@
 nbproject
 /project/tmp/*
 /project/vendor/*
-env.php
-propel.php
+/project/env.php
+/project/propel.php

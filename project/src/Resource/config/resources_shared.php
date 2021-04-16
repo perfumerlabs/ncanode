@@ -16,7 +16,15 @@ return [
         'migration_dir' => 'src/Resource/propel/migration',
         'migration_table' => 'ncanode_propel_migration',
     ],
-    
+    'pg' => [
+        'real_host' => 'PG_REAL_HOST',
+        'host' => 'PG_HOST',
+        'port' => 'PG_PORT',
+        'database' => 'PG_DATABASE',
+        'schema' => 'PG_SCHEMA',
+        'user' => 'PG_USER',
+        'password' => 'PG_PASSWORD',
+    ],
     'ncanode' => [
         'remote_url' => 'NCANODE_REMOTE_URL',
         'key' => 'NCANODE_KEY',
