@@ -75,7 +75,7 @@ class ValidateController extends LayoutController
                 $this->forward('error', 'badRequest', [$this->t('error.certificate_is_expired')]);
             }
 
-            $statues = [];
+            $statuses = [];
 
             foreach ($rules as $rule) {
                 if (!in_array($rule, self::RULES)) {
@@ -95,7 +95,11 @@ class ValidateController extends LayoutController
                         $sign_iin = $ncanode->getIinByXml($xml, $verify_ocsp, $verify_crl);
                     }
 
-                    $statues[] = $sign_iin === $iin;
+                    $res = $sign_iin === $iin;
+
+                    error_log('[CUSTOM LOG] rule iin ' . $iin . ' status = ' . $res . ', cms_iin = ' . $sign_iin . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'bin') {
                     $this->validateNotEmpty($bin, 'bin');
 
@@ -105,43 +109,73 @@ class ValidateController extends LayoutController
                         $sign_bin = $ncanode->getBinByXml($xml);
                     }
 
-                    $statues[] = $sign_bin === $bin;
+                    $res = $sign_bin === $bin;
+
+                    error_log('[CUSTOM LOG] rule bin ' . $rule . ' status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'auth') {
                     $this->validateNotEmpty($cms, 'cms');
-                    $statues[] = $ncanode->isAuthCertificate($cms, $verify_ocsp, $verify_crl);
+
+                    $res = $ncanode->isAuthCertificate($cms, $verify_ocsp, $verify_crl);
+
+                    error_log('[CUSTOM LOG] rule auth status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'sign') {
                     $this->validateNotEmpty($cms, 'cms');
-                    $statues[] = $ncanode->isSignCertificate($cms, $verify_ocsp, $verify_crl);
+
+                    $res = $ncanode->isSignCertificate($cms, $verify_ocsp, $verify_crl);
+
+                    error_log('[CUSTOM LOG] rule sign status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'individual') {
                     if ($cms) {
-                        $statues[] = $ncanode->isIndividual($cms, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isIndividual($cms, $verify_ocsp, $verify_crl);
                     } else {
-                        $statues[] = $ncanode->isIndividualByXml($xml, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isIndividualByXml($xml, $verify_ocsp, $verify_crl);
                     }
+
+                    error_log('[CUSTOM LOG] rule individual status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'employee') {
                     if ($cms) {
-                        $statues[] = $ncanode->isEmployee($cms, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isEmployee($cms, $verify_ocsp, $verify_crl);
                     } else {
-                        $statues[] = $ncanode->isEmployeeByXml($xml, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isEmployeeByXml($xml, $verify_ocsp, $verify_crl);
                     }
+
+                    error_log('[CUSTOM LOG] rule employee status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'ceo') {
                     if ($cms) {
-                        $statues[] = $ncanode->isCeo($cms, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isCeo($cms, $verify_ocsp, $verify_crl);
                     } else {
-                        $statues[] = $ncanode->isCeoByXml($xml, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isCeoByXml($xml, $verify_ocsp, $verify_crl);
                     }
+
+                    error_log('[CUSTOM LOG] rule ceo status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'organisation') {
                     if ($cms) {
-                        $statues[] = $ncanode->isOrganization($cms, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isOrganization($cms, $verify_ocsp, $verify_crl);
                     } else {
-                        $statues[] = $ncanode->isOrganizationByXml($xml, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isOrganizationByXml($xml, $verify_ocsp, $verify_crl);
                     }
+
+                    error_log('[CUSTOM LOG] rule organisation status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 }
             }
 
             $status = false;
-            if (in_array(true, $statues)) {
-                if ($criteria === 'or' || $criteria === 'and' && !in_array(false, $statues)) {
+            if (in_array(true, $statuses)) {
+                if ($criteria === 'or' || $criteria === 'and' && !in_array(false, $statuses)) {
                     $status = true;
                 }
             }
