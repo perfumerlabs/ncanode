@@ -52,7 +52,7 @@ Parameters (json):
 - xml [string,optional] - XML-sign
 - iin [string,optional] - IIN
 - bin [string,optional] - BIN
-- rule [string,required] - rule for validating. One of ['iin', 'bin', 'auth', 'individual', 'employee', 'ceo', 'organisation']
+- rule [array|string,required] - rule(s) for validating. ['iin', 'bin', 'auth', 'individual', 'employee', 'ceo', 'organisation']
 </p>
 <p>
 
@@ -60,12 +60,7 @@ Success response:
 ```json
 {
   "status": true,
-  "message": null,
-  "content": {
-    "validate": {
-      "result": true
-    }
-  }
+  "message": null
 }
 ```
 </p>

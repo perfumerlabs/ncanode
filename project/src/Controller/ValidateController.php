@@ -25,6 +25,7 @@ class ValidateController extends LayoutController
         $bin        = (string) $this->f('bin');
         $rules      = $this->f('rule');
         $expiration = (bool) $this->f('expiration', true);
+        $criteria   = (string) $this->f('criteria', 'and');
 
         if (!$rules) {
             $this->forward(
@@ -39,11 +40,11 @@ class ValidateController extends LayoutController
         }
 
         $verify_ocsp = true;
-        $verify_crl = true;
+        $verify_crl  = true;
 
         if (!$expiration) {
             $verify_ocsp = false;
-            $verify_crl = false;
+            $verify_crl  = false;
         }
 
         if (!$cms && !$xml) {
@@ -74,7 +75,7 @@ class ValidateController extends LayoutController
                 $this->forward('error', 'badRequest', [$this->t('error.certificate_is_expired')]);
             }
 
-            $result = false;
+            $statuses = [];
 
             foreach ($rules as $rule) {
                 if (!in_array($rule, self::RULES)) {
@@ -89,67 +90,99 @@ class ValidateController extends LayoutController
                     $this->validateNotEmpty($iin, 'iin');
 
                     if ($cms) {
-                        $sign_iin = $ncanode->getIin($cms, $verify_ocsp, $verify_crl);
+                        $sign_iin = $ncanode->getIinFromX509($cms, $verify_ocsp, $verify_crl);
                     } else {
                         $sign_iin = $ncanode->getIinByXml($xml, $verify_ocsp, $verify_crl);
                     }
 
-                    if ($sign_iin === $iin) {
-                        $result = true;
-                    }
+                    $res = $sign_iin === $iin;
+
+                    error_log('[CUSTOM LOG] rule iin ' . $iin . ' status = ' . $res . ', cms_iin = ' . $sign_iin . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'bin') {
                     $this->validateNotEmpty($bin, 'bin');
 
                     if ($cms) {
-                        $sign_bin = $ncanode->getBin($cms);
+                        $sign_bin = $ncanode->getBinByX509($cms);
                     } else {
                         $sign_bin = $ncanode->getBinByXml($xml);
                     }
 
-                    if ($sign_bin === $bin) {
-                        $result = true;
-                    }
+                    $res = $sign_bin === $bin;
+
+                    error_log('[CUSTOM LOG] rule bin ' . $rule . ' status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'auth') {
                     $this->validateNotEmpty($cms, 'cms');
-                    $result = $ncanode->isAuthCertificate($cms, $verify_ocsp, $verify_crl);
+
+                    $res = $ncanode->isAuthCertificate($cms, $verify_ocsp, $verify_crl);
+
+                    error_log('[CUSTOM LOG] rule auth status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'sign') {
                     $this->validateNotEmpty($cms, 'cms');
-                    $result = $ncanode->isSignCertificate($cms, $verify_ocsp, $verify_crl);
+
+                    $res = $ncanode->isSignCertificate($cms, $verify_ocsp, $verify_crl);
+
+                    error_log('[CUSTOM LOG] rule sign status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'individual') {
                     if ($cms) {
-                        $result = $ncanode->isIndividual($cms, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isIndividual($cms, $verify_ocsp, $verify_crl);
                     } else {
-                        $result = $ncanode->isIndividualByXml($xml, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isIndividualByXml($xml, $verify_ocsp, $verify_crl);
                     }
+
+                    error_log('[CUSTOM LOG] rule individual status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'employee') {
                     if ($cms) {
-                        $result = $ncanode->isEmployee($cms, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isEmployee($cms, $verify_ocsp, $verify_crl);
                     } else {
-                        $result = $ncanode->isEmployeeByXml($xml, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isEmployeeByXml($xml, $verify_ocsp, $verify_crl);
                     }
+
+                    error_log('[CUSTOM LOG] rule employee status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'ceo') {
                     if ($cms) {
-                        $result = $ncanode->isCeo($cms, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isCeo($cms, $verify_ocsp, $verify_crl);
                     } else {
-                        $result = $ncanode->isCeoByXml($xml, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isCeoByXml($xml, $verify_ocsp, $verify_crl);
                     }
+
+                    error_log('[CUSTOM LOG] rule ceo status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 } elseif ($rule === 'organisation') {
                     if ($cms) {
-                        $result = $ncanode->isOrganization($cms, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isOrganization($cms, $verify_ocsp, $verify_crl);
                     } else {
-                        $result = $ncanode->isOrganizationByXml($xml, $verify_ocsp, $verify_crl);
+                        $res = $ncanode->isOrganizationByXml($xml, $verify_ocsp, $verify_crl);
                     }
-                }
 
-                if (!$result) {
-                    $this->setContent(['validate' => ['result' => false]]);
+                    error_log('[CUSTOM LOG] rule organisation status = ' . $res . ';' . PHP_EOL);
+
+                    $statuses[] = $res;
                 }
             }
 
-            $this->setContent(['validate' => ['result' => $result]]);
+            $status = false;
+            if (in_array(true, $statuses)) {
+                if ($criteria === 'or' || $criteria === 'and' && !in_array(false, $statuses)) {
+                    $status = true;
+                }
+            }
+
+            $this->setStatus($status);
         } catch (\Throwable $e) {
             throw $e;
-//            $this->forward('error', 'internalServerError', [$e]);
         }
     }
 }
