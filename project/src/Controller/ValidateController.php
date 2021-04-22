@@ -90,7 +90,7 @@ class ValidateController extends LayoutController
                     $this->validateNotEmpty($iin, 'iin');
 
                     if ($cms) {
-                        $sign_iin = $ncanode->getIin($cms, $verify_ocsp, $verify_crl);
+                        $sign_iin = $ncanode->getIinFromX509($cms, $verify_ocsp, $verify_crl);
                     } else {
                         $sign_iin = $ncanode->getIinByXml($xml, $verify_ocsp, $verify_crl);
                     }
@@ -104,7 +104,7 @@ class ValidateController extends LayoutController
                     $this->validateNotEmpty($bin, 'bin');
 
                     if ($cms) {
-                        $sign_bin = $ncanode->getBin($cms);
+                        $sign_bin = $ncanode->getBinByX509($cms);
                     } else {
                         $sign_bin = $ncanode->getBinByXml($xml);
                     }

@@ -491,13 +491,13 @@ class Ncanode extends NCANodeClient
             return null;
         }
 
-        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
+        $rawVerifyResult = $this->rawVerify($cms, $verifyOcsp, $verifyCrl);
 
-        if (!$rawVerifyResult) {
+        if (!isset($rawVerifyResult['cert'])) {
             return null;
         }
 
-        $certificateInfo = new CertificateInfo($rawVerifyResult);
+        $certificateInfo = new CertificateInfo($rawVerifyResult['cert']);
 
         $subject = $certificateInfo->__get('subject');
 
@@ -622,13 +622,13 @@ class Ncanode extends NCANodeClient
             return null;
         }
 
-        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
+        $rawVerifyResult = $this->rawVerify($cms, $verifyOcsp, $verifyCrl);
 
-        if (!$rawVerifyResult) {
+        if (!isset($rawVerifyResult['cert'])) {
             return null;
         }
 
-        $certificateInfo = new CertificateInfo($rawVerifyResult);
+        $certificateInfo = new CertificateInfo($rawVerifyResult['cert']);
 
         $subject = $certificateInfo->__get('subject');
 
