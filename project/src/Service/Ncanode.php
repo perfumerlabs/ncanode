@@ -26,6 +26,12 @@ class Ncanode extends NCANodeClient
     {
         parent::__construct($host, $timeout);
 
+        if (is_bool($dummy) || $dummy === 'true' || $dummy === 'false') {
+            $dummy = (bool) $dummy;
+        } else {
+            $dummy = false;
+        }
+
         $this->dummy = $dummy;
     }
 
@@ -176,8 +182,8 @@ class Ncanode extends NCANodeClient
         if (
             isset($this->x509VerifyResult['request'], $this->x509VerifyResult['result'])
             && isset($this->x509VerifyResult['request']['params'])
-            && isset($this->x509VerifyResult['request']['params']['cms'])
-            && $this->x509VerifyResult['request']['params']['cms'] === $cms
+            && isset($this->x509VerifyResult['request']['params']['cert'])
+            && $this->x509VerifyResult['request']['params']['cert'] === $cms
         ) {
             if (!$verifyOcsp && !$verifyCrl
                 || $this->x509VerifyResult['request']['params']['verifyOcsp']
@@ -274,13 +280,13 @@ class Ncanode extends NCANodeClient
             return true;
         }
 
-        $rawVerifyResult = $this->rawVerify($cms, $verifyOcsp, $verifyCrl);
+        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
 
-        if (!isset($rawVerifyResult['cert'])) {
+        if (!isset($rawVerifyResult)) {
             return false;
         }
 
-        $certificateInfo = new CertificateInfo($rawVerifyResult['cert']);
+        $certificateInfo = new CertificateInfo($rawVerifyResult);
 
         return $certificateInfo->isLegal($checkChain);
     }
@@ -350,11 +356,9 @@ class Ncanode extends NCANodeClient
 
         $certificateInfo = new CertificateInfo($rawVerifyResult);
 
-        if ($certificateInfo->__get('keyUsage') !== 'SIGN') {
-            return false;
-        }
+        error_log('[CUSTOM LOG] CertificateInfo: ' . print_r($certificateInfo, true));
 
-        return true;
+        return $certificateInfo->__get('keyUsage') === 'SIGN';
     }
 
     /**
@@ -406,13 +410,13 @@ class Ncanode extends NCANodeClient
             return true;
         }
 
-        $rawVerifyResult = $this->rawVerify($cms, $verifyOcsp, $verifyCrl);
+        $rawVerifyResult = $this->x509Verify($cms, $verifyOcsp, $verifyCrl);
 
-        if (!isset($rawVerifyResult['cert'])) {
+        if (!isset($rawVerifyResult)) {
             return false;
         }
 
-        $certificateInfo = new CertificateInfo($rawVerifyResult['cert']);
+        $certificateInfo = new CertificateInfo($rawVerifyResult);
 
         return !$certificateInfo->isExpired($date);
     }
