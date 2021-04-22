@@ -499,8 +499,6 @@ class Ncanode extends NCANodeClient
 
         $certificateInfo = new CertificateInfo($rawVerifyResult);
 
-        error_log('[CUSTOM LOG] ' . print_r($rawVerifyResult, true) . '; ' . PHP_EOL);
-
         $subject = $certificateInfo->__get('subject');
 
         return $subject['iin'] ?? null;
