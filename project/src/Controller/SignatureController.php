@@ -3,63 +3,34 @@
 namespace Ncanode\Controller;
 
 use Ncanode\Domain\SignatureDomain;
-use Ncanode\Domain\TagDomain;
 use Ncanode\Model\Map\SignatureTableMap;
 use Ncanode\Model\SignatureQuery;
 use Ncanode\Repository\SignatureRepository;
-use Propel\Runtime\ActiveQuery\Criteria;
+use Perfumer\Helper\Arr;
 use Propel\Runtime\Propel;
 
 class SignatureController extends LayoutController
 {
     public function get()
     {
-        $id       = (int) $this->f('id');
-        $parent   = (int) $this->f('parent');
         $document = $this->f('document');
-        $chain    = $this->f('chain');
-        $stage    = $this->f('stage');
+        $thread = $this->f('thread');
 
-        if (!$id && !$parent && !$document) {
+        if (!$thread && !$document) {
             $this->forward(
                 'error',
                 'badRequest',
-                ['ID, parent, document. ' . $this->t('error.one_of_parameters_must_be_set')]
+                ['"Thread" and "document" parameters must be set']
             );
         }
 
         $obj = SignatureQuery::create()
-            ->leftJoinSignatureTag()
-            ->useSignatureTagQuery()
-            ->leftJoinTag()
-            ->endUse();
-
-        if ($document) {
-            $obj = $obj
-                ->filterByDocument($document)
-                ->_if($chain)
-                ->filterByChain($chain)
-                ->_endif()
-                ->_if($stage)
-                ->filterByStage($stage)
-                ->_endif()
-                ->orderByCreatedAt(Criteria::DESC);
-        }
-
-        if ($parent) {
-            $obj = $obj
-                ->filterByParentId($parent);
-        }
-
-        if ($id) {
-            $obj = $obj
-                ->filterById($id);
-        }
-
-        $obj = $obj->findOne();
+            ->filterByDocument($document)
+            ->filterByThread($thread)
+            ->findOne();
 
         if (!$obj) {
-            $this->forward('error', 'badRequest', [$this->t('error.signature_not_found')]);
+            $this->forward('error', 'pageNotFound', [$this->t('error.signature_not_found')]);
         }
 
         /** @var SignatureRepository $repository */
@@ -70,89 +41,88 @@ class SignatureController extends LayoutController
 
     public function post()
     {
-        $document  = $this->f('document');
-        $chain     = $this->f('chain');
-        $stage     = $this->f('stage');
-        $parent    = (int) $this->f('parent');
-        $signature = $this->f('signature');
-        $tags      = $this->f('tags');
+        $document = (string) $this->f('document');
+        $thread = (string) $this->f('thread');
+        $cms = (string) $this->f('cms');
+        $version = (int) $this->f('version');
 
         $this->validateNotEmpty($document, 'document');
-        $this->validateNotEmpty($signature, 'signature');
+        $this->validateNotEmpty($thread, 'thread');
+        $this->validateNotEmpty($cms, 'cms');
 
-        $exist_obj = SignatureQuery::create()
+        $obj = SignatureQuery::create()
             ->filterByDocument($document)
-            ->_if($chain)
-            ->filterByChain($chain)
-            ->_endif()
-            ->_if($stage)
-            ->filterByStage($stage)
-            ->_endif()
-            ->exists();
+            ->filterByThread($thread)
+            ->findOne();
 
-        if ($exist_obj) {
-            $this->forward('error', 'badRequest', [$this->t('error.same_signature_exists')]);
+        if ($obj && !$version) {
+            $this->forward(
+                'error',
+                'badRequest',
+                ['Version must be set']
+            );
         }
 
-        $parent_obj = null;
-
-        if ($parent) {
-            $parent_obj = SignatureQuery::create()
-                ->findPk($parent);
-
-            if (!$parent_obj) {
-                $this->forward('error', 'badRequest', [$this->t('error.signature_code_exists')]);
-            }
+        if ($obj && $obj->getVersion() !== $version) {
+            $this->forward(
+                'error',
+                'badRequest',
+                ['Version provided is not equal to actual signature version']
+            );
         }
 
         /** @var SignatureDomain $domain */
         $domain = $this->s('ncanode.domain.signature');
 
-        /** @var TagDomain $tag_domain */
-        $tag_domain = $this->s('ncanode.domain.tag');
-
         $con = Propel::getConnection(SignatureTableMap::DATABASE_NAME);
         $con->beginTransaction();
 
         try {
-            $obj = $domain->save(
-                [
-                    'document'  => $document,
-                    'chain'     => $chain,
-                    'stage'     => $stage,
-                    'parent'    => $parent_obj,
-                    'signature' => $signature,
-                ]
-            );
+            $obj = $domain->create($obj, Arr::fetch($this->f(), [
+                'document',
+                'thread',
+                'cms',
+                'version_comment',
+                'version_created_by',
+                'tags',
+            ]));
 
-            if ($obj && $tags) {
-                if (!is_array($tags)) {
-                    $tags = [$tags];
-                }
+            /** @var SignatureRepository $repository */
+            $repository = $this->s('ncanode.repository.signature');
 
-                foreach ($tags as $tag) {
-                    if (!is_string($tag)) {
-                        continue;
-                    }
+            $this->setContent(['signature' => $repository->format($obj)]);
 
-                    $tag_obj = $tag_domain->save(['code' => $tag]);
-                    if ($tag_obj) {
-                        $domain->addTag($obj, $tag_obj);
-                    }
-                }
-            }
+            $this->getExternalResponse()->setStatusCode(201);
 
             $con->commit();
         } catch (\Throwable $e) {
             $con->rollBack();
+
+            throw $e;
         }
     }
 
     public function delete()
     {
-        $id = (int) $this->f('id');
+        $document = $this->f('document');
+        $thread = $this->f('thread');
 
-        $this->validateNotEmpty($id, 'id');
+        if (!$thread && !$document) {
+            $this->forward(
+                'error',
+                'badRequest',
+                ['"Thread" and "document" parameters must be set']
+            );
+        }
+
+        $obj = SignatureQuery::create()
+            ->filterByDocument($document)
+            ->filterByThread($thread)
+            ->findOne();
+
+        if (!$obj) {
+            $this->forward('error', 'pageNotFound', [$this->t('error.signature_not_found')]);
+        }
 
         /** @var SignatureDomain $domain */
         $domain = $this->s('ncanode.domain.signature');
@@ -161,11 +131,13 @@ class SignatureController extends LayoutController
         $con->beginTransaction();
 
         try {
-            $domain->delete($id);
+            $domain->delete($obj);
 
             $con->commit();
         } catch (\Throwable $e) {
             $con->rollBack();
+
+            throw $e;
         }
     }
 }

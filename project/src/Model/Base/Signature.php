@@ -9,8 +9,13 @@ use Ncanode\Model\Signature as ChildSignature;
 use Ncanode\Model\SignatureQuery as ChildSignatureQuery;
 use Ncanode\Model\SignatureTag as ChildSignatureTag;
 use Ncanode\Model\SignatureTagQuery as ChildSignatureTagQuery;
+use Ncanode\Model\SignatureVersion as ChildSignatureVersion;
+use Ncanode\Model\SignatureVersionQuery as ChildSignatureVersionQuery;
+use Ncanode\Model\Tag as ChildTag;
+use Ncanode\Model\TagQuery as ChildTagQuery;
 use Ncanode\Model\Map\SignatureTableMap;
 use Ncanode\Model\Map\SignatureTagTableMap;
+use Ncanode\Model\Map\SignatureVersionTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -81,32 +86,18 @@ abstract class Signature implements ActiveRecordInterface
     protected $document;
 
     /**
-     * The value for the chain field.
-     *
-     * @var        string|null
-     */
-    protected $chain;
-
-    /**
-     * The value for the stage field.
-     *
-     * @var        string|null
-     */
-    protected $stage;
-
-    /**
-     * The value for the parent_id field.
-     *
-     * @var        int|null
-     */
-    protected $parent_id;
-
-    /**
-     * The value for the signature field.
+     * The value for the thread field.
      *
      * @var        string
      */
-    protected $signature;
+    protected $thread;
+
+    /**
+     * The value for the cms field.
+     *
+     * @var        string
+     */
+    protected $cms;
 
     /**
      * The value for the created_at field.
@@ -123,21 +114,55 @@ abstract class Signature implements ActiveRecordInterface
     protected $updated_at;
 
     /**
-     * @var        ChildSignature
+     * The value for the version field.
+     *
+     * Note: this column has a database default value of: 0
+     * @var        int|null
      */
-    protected $aParent;
+    protected $version;
 
     /**
-     * @var        ObjectCollection|ChildSignature[] Collection to store aggregation of ChildSignature objects.
+     * The value for the version_created_at field.
+     *
+     * @var        DateTime|null
      */
-    protected $collSignaturesRelatedById;
-    protected $collSignaturesRelatedByIdPartial;
+    protected $version_created_at;
+
+    /**
+     * The value for the version_created_by field.
+     *
+     * @var        string|null
+     */
+    protected $version_created_by;
+
+    /**
+     * The value for the version_comment field.
+     *
+     * @var        string|null
+     */
+    protected $version_comment;
 
     /**
      * @var        ObjectCollection|ChildSignatureTag[] Collection to store aggregation of ChildSignatureTag objects.
      */
     protected $collSignatureTags;
     protected $collSignatureTagsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildSignatureVersion[] Collection to store aggregation of ChildSignatureVersion objects.
+     */
+    protected $collSignatureVersions;
+    protected $collSignatureVersionsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildTag[] Cross Collection to store aggregation of ChildTag objects.
+     */
+    protected $collTags;
+
+    /**
+     * @var bool
+     */
+    protected $collTagsPartial;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -147,11 +172,19 @@ abstract class Signature implements ActiveRecordInterface
      */
     protected $alreadyInSave = false;
 
+    // versionable behavior
+
+
+    /**
+     * @var bool
+     */
+    protected $enforceVersion = false;
+
     /**
      * An array of objects scheduled for deletion.
-     * @var ObjectCollection|ChildSignature[]
+     * @var ObjectCollection|ChildTag[]
      */
-    protected $signaturesRelatedByIdScheduledForDeletion = null;
+    protected $tagsScheduledForDeletion = null;
 
     /**
      * An array of objects scheduled for deletion.
@@ -160,10 +193,29 @@ abstract class Signature implements ActiveRecordInterface
     protected $signatureTagsScheduledForDeletion = null;
 
     /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildSignatureVersion[]
+     */
+    protected $signatureVersionsScheduledForDeletion = null;
+
+    /**
+     * Applies default values to this object.
+     * This method should be called from the object's constructor (or
+     * equivalent initialization method).
+     * @see __construct()
+     */
+    public function applyDefaultValues()
+    {
+        $this->version = 0;
+    }
+
+    /**
      * Initializes internal state of Ncanode\Model\Base\Signature object.
+     * @see applyDefaults()
      */
     public function __construct()
     {
+        $this->applyDefaultValues();
     }
 
     /**
@@ -405,43 +457,23 @@ abstract class Signature implements ActiveRecordInterface
     }
 
     /**
-     * Get the [chain] column value.
-     *
-     * @return string|null
-     */
-    public function getChain()
-    {
-        return $this->chain;
-    }
-
-    /**
-     * Get the [stage] column value.
-     *
-     * @return string|null
-     */
-    public function getStage()
-    {
-        return $this->stage;
-    }
-
-    /**
-     * Get the [parent_id] column value.
-     *
-     * @return int|null
-     */
-    public function getParentId()
-    {
-        return $this->parent_id;
-    }
-
-    /**
-     * Get the [signature] column value.
+     * Get the [thread] column value.
      *
      * @return string
      */
-    public function getSignature()
+    public function getThread()
     {
-        return $this->signature;
+        return $this->thread;
+    }
+
+    /**
+     * Get the [cms] column value.
+     *
+     * @return string
+     */
+    public function getCms()
+    {
+        return $this->cms;
     }
 
     /**
@@ -485,6 +517,56 @@ abstract class Signature implements ActiveRecordInterface
     }
 
     /**
+     * Get the [version] column value.
+     *
+     * @return int|null
+     */
+    public function getVersion()
+    {
+        return $this->version;
+    }
+
+    /**
+     * Get the [optionally formatted] temporal [version_created_at] column value.
+     *
+     *
+     * @param string|null $format The date/time format string (either date()-style or strftime()-style).
+     *   If format is NULL, then the raw DateTime object will be returned.
+     *
+     * @return string|DateTime|null Formatted date/time value as string or DateTime object (if format is NULL), NULL if column is NULL
+     *
+     * @throws PropelException - if unable to parse/validate the date/time value.
+     */
+    public function getVersionCreatedAt($format = null)
+    {
+        if ($format === null) {
+            return $this->version_created_at;
+        } else {
+            return $this->version_created_at instanceof \DateTimeInterface ? $this->version_created_at->format($format) : null;
+        }
+    }
+
+    /**
+     * Get the [version_created_by] column value.
+     *
+     * @return string|null
+     */
+    public function getVersionCreatedBy()
+    {
+        return $this->version_created_by;
+    }
+
+    /**
+     * Get the [version_comment] column value.
+     *
+     * @return string|null
+     */
+    public function getVersionComment()
+    {
+        return $this->version_comment;
+    }
+
+    /**
      * Set the value of [id] column.
      *
      * @param int $v New value
@@ -525,88 +607,44 @@ abstract class Signature implements ActiveRecordInterface
     } // setDocument()
 
     /**
-     * Set the value of [chain] column.
-     *
-     * @param string|null $v New value
-     * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
-     */
-    public function setChain($v)
-    {
-        if ($v !== null) {
-            $v = (string) $v;
-        }
-
-        if ($this->chain !== $v) {
-            $this->chain = $v;
-            $this->modifiedColumns[SignatureTableMap::COL_CHAIN] = true;
-        }
-
-        return $this;
-    } // setChain()
-
-    /**
-     * Set the value of [stage] column.
-     *
-     * @param string|null $v New value
-     * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
-     */
-    public function setStage($v)
-    {
-        if ($v !== null) {
-            $v = (string) $v;
-        }
-
-        if ($this->stage !== $v) {
-            $this->stage = $v;
-            $this->modifiedColumns[SignatureTableMap::COL_STAGE] = true;
-        }
-
-        return $this;
-    } // setStage()
-
-    /**
-     * Set the value of [parent_id] column.
-     *
-     * @param int|null $v New value
-     * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
-     */
-    public function setParentId($v)
-    {
-        if ($v !== null) {
-            $v = (int) $v;
-        }
-
-        if ($this->parent_id !== $v) {
-            $this->parent_id = $v;
-            $this->modifiedColumns[SignatureTableMap::COL_PARENT_ID] = true;
-        }
-
-        if ($this->aParent !== null && $this->aParent->getId() !== $v) {
-            $this->aParent = null;
-        }
-
-        return $this;
-    } // setParentId()
-
-    /**
-     * Set the value of [signature] column.
+     * Set the value of [thread] column.
      *
      * @param string $v New value
      * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
      */
-    public function setSignature($v)
+    public function setThread($v)
     {
         if ($v !== null) {
             $v = (string) $v;
         }
 
-        if ($this->signature !== $v) {
-            $this->signature = $v;
-            $this->modifiedColumns[SignatureTableMap::COL_SIGNATURE] = true;
+        if ($this->thread !== $v) {
+            $this->thread = $v;
+            $this->modifiedColumns[SignatureTableMap::COL_THREAD] = true;
         }
 
         return $this;
-    } // setSignature()
+    } // setThread()
+
+    /**
+     * Set the value of [cms] column.
+     *
+     * @param string $v New value
+     * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
+     */
+    public function setCms($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->cms !== $v) {
+            $this->cms = $v;
+            $this->modifiedColumns[SignatureTableMap::COL_CMS] = true;
+        }
+
+        return $this;
+    } // setCms()
 
     /**
      * Sets the value of [created_at] column to a normalized version of the date/time value specified.
@@ -649,6 +687,86 @@ abstract class Signature implements ActiveRecordInterface
     } // setUpdatedAt()
 
     /**
+     * Set the value of [version] column.
+     *
+     * @param int|null $v New value
+     * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
+     */
+    public function setVersion($v)
+    {
+        if ($v !== null) {
+            $v = (int) $v;
+        }
+
+        if ($this->version !== $v) {
+            $this->version = $v;
+            $this->modifiedColumns[SignatureTableMap::COL_VERSION] = true;
+        }
+
+        return $this;
+    } // setVersion()
+
+    /**
+     * Sets the value of [version_created_at] column to a normalized version of the date/time value specified.
+     *
+     * @param  string|integer|\DateTimeInterface|null $v string, integer (timestamp), or \DateTimeInterface value.
+     *               Empty strings are treated as NULL.
+     * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
+     */
+    public function setVersionCreatedAt($v)
+    {
+        $dt = PropelDateTime::newInstance($v, null, 'DateTime');
+        if ($this->version_created_at !== null || $dt !== null) {
+            if ($this->version_created_at === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->version_created_at->format("Y-m-d H:i:s.u")) {
+                $this->version_created_at = $dt === null ? null : clone $dt;
+                $this->modifiedColumns[SignatureTableMap::COL_VERSION_CREATED_AT] = true;
+            }
+        } // if either are not null
+
+        return $this;
+    } // setVersionCreatedAt()
+
+    /**
+     * Set the value of [version_created_by] column.
+     *
+     * @param string|null $v New value
+     * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
+     */
+    public function setVersionCreatedBy($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->version_created_by !== $v) {
+            $this->version_created_by = $v;
+            $this->modifiedColumns[SignatureTableMap::COL_VERSION_CREATED_BY] = true;
+        }
+
+        return $this;
+    } // setVersionCreatedBy()
+
+    /**
+     * Set the value of [version_comment] column.
+     *
+     * @param string|null $v New value
+     * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
+     */
+    public function setVersionComment($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->version_comment !== $v) {
+            $this->version_comment = $v;
+            $this->modifiedColumns[SignatureTableMap::COL_VERSION_COMMENT] = true;
+        }
+
+        return $this;
+    } // setVersionComment()
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -658,6 +776,10 @@ abstract class Signature implements ActiveRecordInterface
      */
     public function hasOnlyDefaultValues()
     {
+            if ($this->version !== 0) {
+                return false;
+            }
+
         // otherwise, everything was equal, so return TRUE
         return true;
     } // hasOnlyDefaultValues()
@@ -690,23 +812,29 @@ abstract class Signature implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : SignatureTableMap::translateFieldName('Document', TableMap::TYPE_PHPNAME, $indexType)];
             $this->document = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : SignatureTableMap::translateFieldName('Chain', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->chain = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : SignatureTableMap::translateFieldName('Thread', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->thread = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : SignatureTableMap::translateFieldName('Stage', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->stage = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : SignatureTableMap::translateFieldName('Cms', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->cms = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : SignatureTableMap::translateFieldName('ParentId', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->parent_id = (null !== $col) ? (int) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : SignatureTableMap::translateFieldName('Signature', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->signature = (null !== $col) ? (string) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : SignatureTableMap::translateFieldName('CreatedAt', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : SignatureTableMap::translateFieldName('CreatedAt', TableMap::TYPE_PHPNAME, $indexType)];
             $this->created_at = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : SignatureTableMap::translateFieldName('UpdatedAt', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : SignatureTableMap::translateFieldName('UpdatedAt', TableMap::TYPE_PHPNAME, $indexType)];
             $this->updated_at = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : SignatureTableMap::translateFieldName('Version', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->version = (null !== $col) ? (int) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : SignatureTableMap::translateFieldName('VersionCreatedAt', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->version_created_at = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : SignatureTableMap::translateFieldName('VersionCreatedBy', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->version_created_by = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : SignatureTableMap::translateFieldName('VersionComment', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->version_comment = (null !== $col) ? (string) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -715,7 +843,7 @@ abstract class Signature implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 8; // 8 = SignatureTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 10; // 10 = SignatureTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Ncanode\\Model\\Signature'), 0, $e);
@@ -737,9 +865,6 @@ abstract class Signature implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
-        if ($this->aParent !== null && $this->parent_id !== $this->aParent->getId()) {
-            $this->aParent = null;
-        }
     } // ensureConsistency
 
     /**
@@ -779,11 +904,11 @@ abstract class Signature implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
-            $this->aParent = null;
-            $this->collSignaturesRelatedById = null;
-
             $this->collSignatureTags = null;
 
+            $this->collSignatureVersions = null;
+
+            $this->collTags = null;
         } // if (deep)
     }
 
@@ -848,6 +973,14 @@ abstract class Signature implements ActiveRecordInterface
         return $con->transaction(function () use ($con) {
             $ret = $this->preSave($con);
             $isInsert = $this->isNew();
+            // versionable behavior
+            if ($this->isVersioningNecessary()) {
+                $this->setVersion($this->isNew() ? 1 : $this->getLastVersionNumber($con) + 1);
+                if (!$this->isColumnModified(SignatureTableMap::COL_VERSION_CREATED_AT)) {
+                    $this->setVersionCreatedAt(time());
+                }
+                $createVersion = true; // for postSave hook
+            }
             if ($isInsert) {
                 $ret = $ret && $this->preInsert($con);
                 // timestampable behavior
@@ -874,6 +1007,10 @@ abstract class Signature implements ActiveRecordInterface
                     $this->postUpdate($con);
                 }
                 $this->postSave($con);
+                // versionable behavior
+                if (isset($createVersion)) {
+                    $this->addVersion($con);
+                }
                 SignatureTableMap::addInstanceToPool($this);
             } else {
                 $affectedRows = 0;
@@ -900,18 +1037,6 @@ abstract class Signature implements ActiveRecordInterface
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
 
-            // We call the save method on the following object(s) if they
-            // were passed to this object by their corresponding set
-            // method.  This object relates to these object(s) by a
-            // foreign key reference.
-
-            if ($this->aParent !== null) {
-                if ($this->aParent->isModified() || $this->aParent->isNew()) {
-                    $affectedRows += $this->aParent->save($con);
-                }
-                $this->setParent($this->aParent);
-            }
-
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
                 if ($this->isNew()) {
@@ -923,23 +1048,34 @@ abstract class Signature implements ActiveRecordInterface
                 $this->resetModified();
             }
 
-            if ($this->signaturesRelatedByIdScheduledForDeletion !== null) {
-                if (!$this->signaturesRelatedByIdScheduledForDeletion->isEmpty()) {
-                    foreach ($this->signaturesRelatedByIdScheduledForDeletion as $signatureRelatedById) {
-                        // need to save related object because we set the relation to null
-                        $signatureRelatedById->save($con);
+            if ($this->tagsScheduledForDeletion !== null) {
+                if (!$this->tagsScheduledForDeletion->isEmpty()) {
+                    $pks = array();
+                    foreach ($this->tagsScheduledForDeletion as $entry) {
+                        $entryPk = [];
+
+                        $entryPk[0] = $this->getId();
+                        $entryPk[1] = $entry->getId();
+                        $pks[] = $entryPk;
                     }
-                    $this->signaturesRelatedByIdScheduledForDeletion = null;
+
+                    \Ncanode\Model\SignatureTagQuery::create()
+                        ->filterByPrimaryKeys($pks)
+                        ->delete($con);
+
+                    $this->tagsScheduledForDeletion = null;
+                }
+
+            }
+
+            if ($this->collTags) {
+                foreach ($this->collTags as $tag) {
+                    if (!$tag->isDeleted() && ($tag->isNew() || $tag->isModified())) {
+                        $tag->save($con);
+                    }
                 }
             }
 
-            if ($this->collSignaturesRelatedById !== null) {
-                foreach ($this->collSignaturesRelatedById as $referrerFK) {
-                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
-                        $affectedRows += $referrerFK->save($con);
-                    }
-                }
-            }
 
             if ($this->signatureTagsScheduledForDeletion !== null) {
                 if (!$this->signatureTagsScheduledForDeletion->isEmpty()) {
@@ -952,6 +1088,23 @@ abstract class Signature implements ActiveRecordInterface
 
             if ($this->collSignatureTags !== null) {
                 foreach ($this->collSignatureTags as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->signatureVersionsScheduledForDeletion !== null) {
+                if (!$this->signatureVersionsScheduledForDeletion->isEmpty()) {
+                    \Ncanode\Model\SignatureVersionQuery::create()
+                        ->filterByPrimaryKeys($this->signatureVersionsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->signatureVersionsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collSignatureVersions !== null) {
+                foreach ($this->collSignatureVersions as $referrerFK) {
                     if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
                         $affectedRows += $referrerFK->save($con);
                     }
@@ -999,23 +1152,29 @@ abstract class Signature implements ActiveRecordInterface
         if ($this->isColumnModified(SignatureTableMap::COL_DOCUMENT)) {
             $modifiedColumns[':p' . $index++]  = 'document';
         }
-        if ($this->isColumnModified(SignatureTableMap::COL_CHAIN)) {
-            $modifiedColumns[':p' . $index++]  = 'chain';
+        if ($this->isColumnModified(SignatureTableMap::COL_THREAD)) {
+            $modifiedColumns[':p' . $index++]  = 'thread';
         }
-        if ($this->isColumnModified(SignatureTableMap::COL_STAGE)) {
-            $modifiedColumns[':p' . $index++]  = 'stage';
-        }
-        if ($this->isColumnModified(SignatureTableMap::COL_PARENT_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'parent_id';
-        }
-        if ($this->isColumnModified(SignatureTableMap::COL_SIGNATURE)) {
-            $modifiedColumns[':p' . $index++]  = 'signature';
+        if ($this->isColumnModified(SignatureTableMap::COL_CMS)) {
+            $modifiedColumns[':p' . $index++]  = 'cms';
         }
         if ($this->isColumnModified(SignatureTableMap::COL_CREATED_AT)) {
             $modifiedColumns[':p' . $index++]  = 'created_at';
         }
         if ($this->isColumnModified(SignatureTableMap::COL_UPDATED_AT)) {
             $modifiedColumns[':p' . $index++]  = 'updated_at';
+        }
+        if ($this->isColumnModified(SignatureTableMap::COL_VERSION)) {
+            $modifiedColumns[':p' . $index++]  = 'version';
+        }
+        if ($this->isColumnModified(SignatureTableMap::COL_VERSION_CREATED_AT)) {
+            $modifiedColumns[':p' . $index++]  = 'version_created_at';
+        }
+        if ($this->isColumnModified(SignatureTableMap::COL_VERSION_CREATED_BY)) {
+            $modifiedColumns[':p' . $index++]  = 'version_created_by';
+        }
+        if ($this->isColumnModified(SignatureTableMap::COL_VERSION_COMMENT)) {
+            $modifiedColumns[':p' . $index++]  = 'version_comment';
         }
 
         $sql = sprintf(
@@ -1034,23 +1193,29 @@ abstract class Signature implements ActiveRecordInterface
                     case 'document':
                         $stmt->bindValue($identifier, $this->document, PDO::PARAM_STR);
                         break;
-                    case 'chain':
-                        $stmt->bindValue($identifier, $this->chain, PDO::PARAM_STR);
+                    case 'thread':
+                        $stmt->bindValue($identifier, $this->thread, PDO::PARAM_STR);
                         break;
-                    case 'stage':
-                        $stmt->bindValue($identifier, $this->stage, PDO::PARAM_STR);
-                        break;
-                    case 'parent_id':
-                        $stmt->bindValue($identifier, $this->parent_id, PDO::PARAM_INT);
-                        break;
-                    case 'signature':
-                        $stmt->bindValue($identifier, $this->signature, PDO::PARAM_STR);
+                    case 'cms':
+                        $stmt->bindValue($identifier, $this->cms, PDO::PARAM_STR);
                         break;
                     case 'created_at':
                         $stmt->bindValue($identifier, $this->created_at ? $this->created_at->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
                         break;
                     case 'updated_at':
                         $stmt->bindValue($identifier, $this->updated_at ? $this->updated_at->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
+                        break;
+                    case 'version':
+                        $stmt->bindValue($identifier, $this->version, PDO::PARAM_INT);
+                        break;
+                    case 'version_created_at':
+                        $stmt->bindValue($identifier, $this->version_created_at ? $this->version_created_at->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
+                        break;
+                    case 'version_created_by':
+                        $stmt->bindValue($identifier, $this->version_created_by, PDO::PARAM_STR);
+                        break;
+                    case 'version_comment':
+                        $stmt->bindValue($identifier, $this->version_comment, PDO::PARAM_STR);
                         break;
                 }
             }
@@ -1114,22 +1279,28 @@ abstract class Signature implements ActiveRecordInterface
                 return $this->getDocument();
                 break;
             case 2:
-                return $this->getChain();
+                return $this->getThread();
                 break;
             case 3:
-                return $this->getStage();
+                return $this->getCms();
                 break;
             case 4:
-                return $this->getParentId();
-                break;
-            case 5:
-                return $this->getSignature();
-                break;
-            case 6:
                 return $this->getCreatedAt();
                 break;
-            case 7:
+            case 5:
                 return $this->getUpdatedAt();
+                break;
+            case 6:
+                return $this->getVersion();
+                break;
+            case 7:
+                return $this->getVersionCreatedAt();
+                break;
+            case 8:
+                return $this->getVersionCreatedBy();
+                break;
+            case 9:
+                return $this->getVersionComment();
                 break;
             default:
                 return null;
@@ -1163,15 +1334,21 @@ abstract class Signature implements ActiveRecordInterface
         $result = array(
             $keys[0] => $this->getId(),
             $keys[1] => $this->getDocument(),
-            $keys[2] => $this->getChain(),
-            $keys[3] => $this->getStage(),
-            $keys[4] => $this->getParentId(),
-            $keys[5] => $this->getSignature(),
-            $keys[6] => $this->getCreatedAt(),
-            $keys[7] => $this->getUpdatedAt(),
+            $keys[2] => $this->getThread(),
+            $keys[3] => $this->getCms(),
+            $keys[4] => $this->getCreatedAt(),
+            $keys[5] => $this->getUpdatedAt(),
+            $keys[6] => $this->getVersion(),
+            $keys[7] => $this->getVersionCreatedAt(),
+            $keys[8] => $this->getVersionCreatedBy(),
+            $keys[9] => $this->getVersionComment(),
         );
-        if ($result[$keys[6]] instanceof \DateTimeInterface) {
-            $result[$keys[6]] = $result[$keys[6]]->format('Y-m-d H:i:s.u');
+        if ($result[$keys[4]] instanceof \DateTimeInterface) {
+            $result[$keys[4]] = $result[$keys[4]]->format('Y-m-d H:i:s.u');
+        }
+
+        if ($result[$keys[5]] instanceof \DateTimeInterface) {
+            $result[$keys[5]] = $result[$keys[5]]->format('Y-m-d H:i:s.u');
         }
 
         if ($result[$keys[7]] instanceof \DateTimeInterface) {
@@ -1184,36 +1361,6 @@ abstract class Signature implements ActiveRecordInterface
         }
 
         if ($includeForeignObjects) {
-            if (null !== $this->aParent) {
-
-                switch ($keyType) {
-                    case TableMap::TYPE_CAMELNAME:
-                        $key = 'signature';
-                        break;
-                    case TableMap::TYPE_FIELDNAME:
-                        $key = 'ncanode_signature';
-                        break;
-                    default:
-                        $key = 'Parent';
-                }
-
-                $result[$key] = $this->aParent->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
-            }
-            if (null !== $this->collSignaturesRelatedById) {
-
-                switch ($keyType) {
-                    case TableMap::TYPE_CAMELNAME:
-                        $key = 'signatures';
-                        break;
-                    case TableMap::TYPE_FIELDNAME:
-                        $key = 'ncanode_signatures';
-                        break;
-                    default:
-                        $key = 'Signatures';
-                }
-
-                $result[$key] = $this->collSignaturesRelatedById->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
-            }
             if (null !== $this->collSignatureTags) {
 
                 switch ($keyType) {
@@ -1228,6 +1375,21 @@ abstract class Signature implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->collSignatureTags->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collSignatureVersions) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'signatureVersions';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'ncanode_signature_versions';
+                        break;
+                    default:
+                        $key = 'SignatureVersions';
+                }
+
+                $result[$key] = $this->collSignatureVersions->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
         }
 
@@ -1270,22 +1432,28 @@ abstract class Signature implements ActiveRecordInterface
                 $this->setDocument($value);
                 break;
             case 2:
-                $this->setChain($value);
+                $this->setThread($value);
                 break;
             case 3:
-                $this->setStage($value);
+                $this->setCms($value);
                 break;
             case 4:
-                $this->setParentId($value);
-                break;
-            case 5:
-                $this->setSignature($value);
-                break;
-            case 6:
                 $this->setCreatedAt($value);
                 break;
-            case 7:
+            case 5:
                 $this->setUpdatedAt($value);
+                break;
+            case 6:
+                $this->setVersion($value);
+                break;
+            case 7:
+                $this->setVersionCreatedAt($value);
+                break;
+            case 8:
+                $this->setVersionCreatedBy($value);
+                break;
+            case 9:
+                $this->setVersionComment($value);
                 break;
         } // switch()
 
@@ -1320,22 +1488,28 @@ abstract class Signature implements ActiveRecordInterface
             $this->setDocument($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setChain($arr[$keys[2]]);
+            $this->setThread($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
-            $this->setStage($arr[$keys[3]]);
+            $this->setCms($arr[$keys[3]]);
         }
         if (array_key_exists($keys[4], $arr)) {
-            $this->setParentId($arr[$keys[4]]);
+            $this->setCreatedAt($arr[$keys[4]]);
         }
         if (array_key_exists($keys[5], $arr)) {
-            $this->setSignature($arr[$keys[5]]);
+            $this->setUpdatedAt($arr[$keys[5]]);
         }
         if (array_key_exists($keys[6], $arr)) {
-            $this->setCreatedAt($arr[$keys[6]]);
+            $this->setVersion($arr[$keys[6]]);
         }
         if (array_key_exists($keys[7], $arr)) {
-            $this->setUpdatedAt($arr[$keys[7]]);
+            $this->setVersionCreatedAt($arr[$keys[7]]);
+        }
+        if (array_key_exists($keys[8], $arr)) {
+            $this->setVersionCreatedBy($arr[$keys[8]]);
+        }
+        if (array_key_exists($keys[9], $arr)) {
+            $this->setVersionComment($arr[$keys[9]]);
         }
     }
 
@@ -1384,23 +1558,29 @@ abstract class Signature implements ActiveRecordInterface
         if ($this->isColumnModified(SignatureTableMap::COL_DOCUMENT)) {
             $criteria->add(SignatureTableMap::COL_DOCUMENT, $this->document);
         }
-        if ($this->isColumnModified(SignatureTableMap::COL_CHAIN)) {
-            $criteria->add(SignatureTableMap::COL_CHAIN, $this->chain);
+        if ($this->isColumnModified(SignatureTableMap::COL_THREAD)) {
+            $criteria->add(SignatureTableMap::COL_THREAD, $this->thread);
         }
-        if ($this->isColumnModified(SignatureTableMap::COL_STAGE)) {
-            $criteria->add(SignatureTableMap::COL_STAGE, $this->stage);
-        }
-        if ($this->isColumnModified(SignatureTableMap::COL_PARENT_ID)) {
-            $criteria->add(SignatureTableMap::COL_PARENT_ID, $this->parent_id);
-        }
-        if ($this->isColumnModified(SignatureTableMap::COL_SIGNATURE)) {
-            $criteria->add(SignatureTableMap::COL_SIGNATURE, $this->signature);
+        if ($this->isColumnModified(SignatureTableMap::COL_CMS)) {
+            $criteria->add(SignatureTableMap::COL_CMS, $this->cms);
         }
         if ($this->isColumnModified(SignatureTableMap::COL_CREATED_AT)) {
             $criteria->add(SignatureTableMap::COL_CREATED_AT, $this->created_at);
         }
         if ($this->isColumnModified(SignatureTableMap::COL_UPDATED_AT)) {
             $criteria->add(SignatureTableMap::COL_UPDATED_AT, $this->updated_at);
+        }
+        if ($this->isColumnModified(SignatureTableMap::COL_VERSION)) {
+            $criteria->add(SignatureTableMap::COL_VERSION, $this->version);
+        }
+        if ($this->isColumnModified(SignatureTableMap::COL_VERSION_CREATED_AT)) {
+            $criteria->add(SignatureTableMap::COL_VERSION_CREATED_AT, $this->version_created_at);
+        }
+        if ($this->isColumnModified(SignatureTableMap::COL_VERSION_CREATED_BY)) {
+            $criteria->add(SignatureTableMap::COL_VERSION_CREATED_BY, $this->version_created_by);
+        }
+        if ($this->isColumnModified(SignatureTableMap::COL_VERSION_COMMENT)) {
+            $criteria->add(SignatureTableMap::COL_VERSION_COMMENT, $this->version_comment);
         }
 
         return $criteria;
@@ -1489,27 +1669,29 @@ abstract class Signature implements ActiveRecordInterface
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
         $copyObj->setDocument($this->getDocument());
-        $copyObj->setChain($this->getChain());
-        $copyObj->setStage($this->getStage());
-        $copyObj->setParentId($this->getParentId());
-        $copyObj->setSignature($this->getSignature());
+        $copyObj->setThread($this->getThread());
+        $copyObj->setCms($this->getCms());
         $copyObj->setCreatedAt($this->getCreatedAt());
         $copyObj->setUpdatedAt($this->getUpdatedAt());
+        $copyObj->setVersion($this->getVersion());
+        $copyObj->setVersionCreatedAt($this->getVersionCreatedAt());
+        $copyObj->setVersionCreatedBy($this->getVersionCreatedBy());
+        $copyObj->setVersionComment($this->getVersionComment());
 
         if ($deepCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
             // the getter/setter methods for fkey referrer objects.
             $copyObj->setNew(false);
 
-            foreach ($this->getSignaturesRelatedById() as $relObj) {
-                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
-                    $copyObj->addSignatureRelatedById($relObj->copy($deepCopy));
-                }
-            }
-
             foreach ($this->getSignatureTags() as $relObj) {
                 if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
                     $copyObj->addSignatureTag($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getSignatureVersions() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addSignatureVersion($relObj->copy($deepCopy));
                 }
             }
 
@@ -1543,57 +1725,6 @@ abstract class Signature implements ActiveRecordInterface
         return $copyObj;
     }
 
-    /**
-     * Declares an association between this object and a ChildSignature object.
-     *
-     * @param  ChildSignature|null $v
-     * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
-     * @throws PropelException
-     */
-    public function setParent(ChildSignature $v = null)
-    {
-        if ($v === null) {
-            $this->setParentId(NULL);
-        } else {
-            $this->setParentId($v->getId());
-        }
-
-        $this->aParent = $v;
-
-        // Add binding for other direction of this n:n relationship.
-        // If this object has already been added to the ChildSignature object, it will not be re-added.
-        if ($v !== null) {
-            $v->addSignatureRelatedById($this);
-        }
-
-
-        return $this;
-    }
-
-
-    /**
-     * Get the associated ChildSignature object
-     *
-     * @param  ConnectionInterface $con Optional Connection object.
-     * @return ChildSignature|null The associated ChildSignature object.
-     * @throws PropelException
-     */
-    public function getParent(ConnectionInterface $con = null)
-    {
-        if ($this->aParent === null && ($this->parent_id != 0)) {
-            $this->aParent = ChildSignatureQuery::create()->findPk($this->parent_id, $con);
-            /* The following can be used additionally to
-                guarantee the related object contains a reference
-                to this object.  This level of coupling may, however, be
-                undesirable since it could result in an only partially populated collection
-                in the referenced object.
-                $this->aParent->addSignaturesRelatedById($this);
-             */
-        }
-
-        return $this->aParent;
-    }
-
 
     /**
      * Initializes a collection based on the name of a relation.
@@ -1605,248 +1736,14 @@ abstract class Signature implements ActiveRecordInterface
      */
     public function initRelation($relationName)
     {
-        if ('SignatureRelatedById' === $relationName) {
-            $this->initSignaturesRelatedById();
-            return;
-        }
         if ('SignatureTag' === $relationName) {
             $this->initSignatureTags();
             return;
         }
-    }
-
-    /**
-     * Clears out the collSignaturesRelatedById collection
-     *
-     * This does not modify the database; however, it will remove any associated objects, causing
-     * them to be refetched by subsequent calls to accessor method.
-     *
-     * @return void
-     * @see        addSignaturesRelatedById()
-     */
-    public function clearSignaturesRelatedById()
-    {
-        $this->collSignaturesRelatedById = null; // important to set this to NULL since that means it is uninitialized
-    }
-
-    /**
-     * Reset is the collSignaturesRelatedById collection loaded partially.
-     */
-    public function resetPartialSignaturesRelatedById($v = true)
-    {
-        $this->collSignaturesRelatedByIdPartial = $v;
-    }
-
-    /**
-     * Initializes the collSignaturesRelatedById collection.
-     *
-     * By default this just sets the collSignaturesRelatedById collection to an empty array (like clearcollSignaturesRelatedById());
-     * however, you may wish to override this method in your stub class to provide setting appropriate
-     * to your application -- for example, setting the initial array to the values stored in database.
-     *
-     * @param      boolean $overrideExisting If set to true, the method call initializes
-     *                                        the collection even if it is not empty
-     *
-     * @return void
-     */
-    public function initSignaturesRelatedById($overrideExisting = true)
-    {
-        if (null !== $this->collSignaturesRelatedById && !$overrideExisting) {
+        if ('SignatureVersion' === $relationName) {
+            $this->initSignatureVersions();
             return;
         }
-
-        $collectionClassName = SignatureTableMap::getTableMap()->getCollectionClassName();
-
-        $this->collSignaturesRelatedById = new $collectionClassName;
-        $this->collSignaturesRelatedById->setModel('\Ncanode\Model\Signature');
-    }
-
-    /**
-     * Gets an array of ChildSignature objects which contain a foreign key that references this object.
-     *
-     * If the $criteria is not null, it is used to always fetch the results from the database.
-     * Otherwise the results are fetched from the database the first time, then cached.
-     * Next time the same method is called without $criteria, the cached collection is returned.
-     * If this ChildSignature is new, it will return
-     * an empty collection or the current collection; the criteria is ignored on a new object.
-     *
-     * @param      Criteria $criteria optional Criteria object to narrow the query
-     * @param      ConnectionInterface $con optional connection object
-     * @return ObjectCollection|ChildSignature[] List of ChildSignature objects
-     * @throws PropelException
-     */
-    public function getSignaturesRelatedById(Criteria $criteria = null, ConnectionInterface $con = null)
-    {
-        $partial = $this->collSignaturesRelatedByIdPartial && !$this->isNew();
-        if (null === $this->collSignaturesRelatedById || null !== $criteria || $partial) {
-            if ($this->isNew()) {
-                // return empty collection
-                if (null === $this->collSignaturesRelatedById) {
-                    $this->initSignaturesRelatedById();
-                } else {
-                    $collectionClassName = SignatureTableMap::getTableMap()->getCollectionClassName();
-
-                    $collSignaturesRelatedById = new $collectionClassName;
-                    $collSignaturesRelatedById->setModel('\Ncanode\Model\Signature');
-
-                    return $collSignaturesRelatedById;
-                }
-            } else {
-                $collSignaturesRelatedById = ChildSignatureQuery::create(null, $criteria)
-                    ->filterByParent($this)
-                    ->find($con);
-
-                if (null !== $criteria) {
-                    if (false !== $this->collSignaturesRelatedByIdPartial && count($collSignaturesRelatedById)) {
-                        $this->initSignaturesRelatedById(false);
-
-                        foreach ($collSignaturesRelatedById as $obj) {
-                            if (false == $this->collSignaturesRelatedById->contains($obj)) {
-                                $this->collSignaturesRelatedById->append($obj);
-                            }
-                        }
-
-                        $this->collSignaturesRelatedByIdPartial = true;
-                    }
-
-                    return $collSignaturesRelatedById;
-                }
-
-                if ($partial && $this->collSignaturesRelatedById) {
-                    foreach ($this->collSignaturesRelatedById as $obj) {
-                        if ($obj->isNew()) {
-                            $collSignaturesRelatedById[] = $obj;
-                        }
-                    }
-                }
-
-                $this->collSignaturesRelatedById = $collSignaturesRelatedById;
-                $this->collSignaturesRelatedByIdPartial = false;
-            }
-        }
-
-        return $this->collSignaturesRelatedById;
-    }
-
-    /**
-     * Sets a collection of ChildSignature objects related by a one-to-many relationship
-     * to the current object.
-     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
-     * and new objects from the given Propel collection.
-     *
-     * @param      Collection $signaturesRelatedById A Propel collection.
-     * @param      ConnectionInterface $con Optional connection object
-     * @return $this|ChildSignature The current object (for fluent API support)
-     */
-    public function setSignaturesRelatedById(Collection $signaturesRelatedById, ConnectionInterface $con = null)
-    {
-        /** @var ChildSignature[] $signaturesRelatedByIdToDelete */
-        $signaturesRelatedByIdToDelete = $this->getSignaturesRelatedById(new Criteria(), $con)->diff($signaturesRelatedById);
-
-
-        $this->signaturesRelatedByIdScheduledForDeletion = $signaturesRelatedByIdToDelete;
-
-        foreach ($signaturesRelatedByIdToDelete as $signatureRelatedByIdRemoved) {
-            $signatureRelatedByIdRemoved->setParent(null);
-        }
-
-        $this->collSignaturesRelatedById = null;
-        foreach ($signaturesRelatedById as $signatureRelatedById) {
-            $this->addSignatureRelatedById($signatureRelatedById);
-        }
-
-        $this->collSignaturesRelatedById = $signaturesRelatedById;
-        $this->collSignaturesRelatedByIdPartial = false;
-
-        return $this;
-    }
-
-    /**
-     * Returns the number of related Signature objects.
-     *
-     * @param      Criteria $criteria
-     * @param      boolean $distinct
-     * @param      ConnectionInterface $con
-     * @return int             Count of related Signature objects.
-     * @throws PropelException
-     */
-    public function countSignaturesRelatedById(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
-    {
-        $partial = $this->collSignaturesRelatedByIdPartial && !$this->isNew();
-        if (null === $this->collSignaturesRelatedById || null !== $criteria || $partial) {
-            if ($this->isNew() && null === $this->collSignaturesRelatedById) {
-                return 0;
-            }
-
-            if ($partial && !$criteria) {
-                return count($this->getSignaturesRelatedById());
-            }
-
-            $query = ChildSignatureQuery::create(null, $criteria);
-            if ($distinct) {
-                $query->distinct();
-            }
-
-            return $query
-                ->filterByParent($this)
-                ->count($con);
-        }
-
-        return count($this->collSignaturesRelatedById);
-    }
-
-    /**
-     * Method called to associate a ChildSignature object to this object
-     * through the ChildSignature foreign key attribute.
-     *
-     * @param  ChildSignature $l ChildSignature
-     * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
-     */
-    public function addSignatureRelatedById(ChildSignature $l)
-    {
-        if ($this->collSignaturesRelatedById === null) {
-            $this->initSignaturesRelatedById();
-            $this->collSignaturesRelatedByIdPartial = true;
-        }
-
-        if (!$this->collSignaturesRelatedById->contains($l)) {
-            $this->doAddSignatureRelatedById($l);
-
-            if ($this->signaturesRelatedByIdScheduledForDeletion and $this->signaturesRelatedByIdScheduledForDeletion->contains($l)) {
-                $this->signaturesRelatedByIdScheduledForDeletion->remove($this->signaturesRelatedByIdScheduledForDeletion->search($l));
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param ChildSignature $signatureRelatedById The ChildSignature object to add.
-     */
-    protected function doAddSignatureRelatedById(ChildSignature $signatureRelatedById)
-    {
-        $this->collSignaturesRelatedById[]= $signatureRelatedById;
-        $signatureRelatedById->setParent($this);
-    }
-
-    /**
-     * @param  ChildSignature $signatureRelatedById The ChildSignature object to remove.
-     * @return $this|ChildSignature The current object (for fluent API support)
-     */
-    public function removeSignatureRelatedById(ChildSignature $signatureRelatedById)
-    {
-        if ($this->getSignaturesRelatedById()->contains($signatureRelatedById)) {
-            $pos = $this->collSignaturesRelatedById->search($signatureRelatedById);
-            $this->collSignaturesRelatedById->remove($pos);
-            if (null === $this->signaturesRelatedByIdScheduledForDeletion) {
-                $this->signaturesRelatedByIdScheduledForDeletion = clone $this->collSignaturesRelatedById;
-                $this->signaturesRelatedByIdScheduledForDeletion->clear();
-            }
-            $this->signaturesRelatedByIdScheduledForDeletion[]= $signatureRelatedById;
-            $signatureRelatedById->setParent(null);
-        }
-
-        return $this;
     }
 
     /**
@@ -1978,7 +1875,10 @@ abstract class Signature implements ActiveRecordInterface
         $signatureTagsToDelete = $this->getSignatureTags(new Criteria(), $con)->diff($signatureTags);
 
 
-        $this->signatureTagsScheduledForDeletion = $signatureTagsToDelete;
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->signatureTagsScheduledForDeletion = clone $signatureTagsToDelete;
 
         foreach ($signatureTagsToDelete as $signatureTagRemoved) {
             $signatureTagRemoved->setSignature(null);
@@ -2109,25 +2009,505 @@ abstract class Signature implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collSignatureVersions collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addSignatureVersions()
+     */
+    public function clearSignatureVersions()
+    {
+        $this->collSignatureVersions = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collSignatureVersions collection loaded partially.
+     */
+    public function resetPartialSignatureVersions($v = true)
+    {
+        $this->collSignatureVersionsPartial = $v;
+    }
+
+    /**
+     * Initializes the collSignatureVersions collection.
+     *
+     * By default this just sets the collSignatureVersions collection to an empty array (like clearcollSignatureVersions());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initSignatureVersions($overrideExisting = true)
+    {
+        if (null !== $this->collSignatureVersions && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = SignatureVersionTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collSignatureVersions = new $collectionClassName;
+        $this->collSignatureVersions->setModel('\Ncanode\Model\SignatureVersion');
+    }
+
+    /**
+     * Gets an array of ChildSignatureVersion objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildSignature is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildSignatureVersion[] List of ChildSignatureVersion objects
+     * @throws PropelException
+     */
+    public function getSignatureVersions(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSignatureVersionsPartial && !$this->isNew();
+        if (null === $this->collSignatureVersions || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collSignatureVersions) {
+                    $this->initSignatureVersions();
+                } else {
+                    $collectionClassName = SignatureVersionTableMap::getTableMap()->getCollectionClassName();
+
+                    $collSignatureVersions = new $collectionClassName;
+                    $collSignatureVersions->setModel('\Ncanode\Model\SignatureVersion');
+
+                    return $collSignatureVersions;
+                }
+            } else {
+                $collSignatureVersions = ChildSignatureVersionQuery::create(null, $criteria)
+                    ->filterBySignature($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collSignatureVersionsPartial && count($collSignatureVersions)) {
+                        $this->initSignatureVersions(false);
+
+                        foreach ($collSignatureVersions as $obj) {
+                            if (false == $this->collSignatureVersions->contains($obj)) {
+                                $this->collSignatureVersions->append($obj);
+                            }
+                        }
+
+                        $this->collSignatureVersionsPartial = true;
+                    }
+
+                    return $collSignatureVersions;
+                }
+
+                if ($partial && $this->collSignatureVersions) {
+                    foreach ($this->collSignatureVersions as $obj) {
+                        if ($obj->isNew()) {
+                            $collSignatureVersions[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collSignatureVersions = $collSignatureVersions;
+                $this->collSignatureVersionsPartial = false;
+            }
+        }
+
+        return $this->collSignatureVersions;
+    }
+
+    /**
+     * Sets a collection of ChildSignatureVersion objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $signatureVersions A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildSignature The current object (for fluent API support)
+     */
+    public function setSignatureVersions(Collection $signatureVersions, ConnectionInterface $con = null)
+    {
+        /** @var ChildSignatureVersion[] $signatureVersionsToDelete */
+        $signatureVersionsToDelete = $this->getSignatureVersions(new Criteria(), $con)->diff($signatureVersions);
+
+
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->signatureVersionsScheduledForDeletion = clone $signatureVersionsToDelete;
+
+        foreach ($signatureVersionsToDelete as $signatureVersionRemoved) {
+            $signatureVersionRemoved->setSignature(null);
+        }
+
+        $this->collSignatureVersions = null;
+        foreach ($signatureVersions as $signatureVersion) {
+            $this->addSignatureVersion($signatureVersion);
+        }
+
+        $this->collSignatureVersions = $signatureVersions;
+        $this->collSignatureVersionsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related SignatureVersion objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related SignatureVersion objects.
+     * @throws PropelException
+     */
+    public function countSignatureVersions(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSignatureVersionsPartial && !$this->isNew();
+        if (null === $this->collSignatureVersions || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collSignatureVersions) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getSignatureVersions());
+            }
+
+            $query = ChildSignatureVersionQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterBySignature($this)
+                ->count($con);
+        }
+
+        return count($this->collSignatureVersions);
+    }
+
+    /**
+     * Method called to associate a ChildSignatureVersion object to this object
+     * through the ChildSignatureVersion foreign key attribute.
+     *
+     * @param  ChildSignatureVersion $l ChildSignatureVersion
+     * @return $this|\Ncanode\Model\Signature The current object (for fluent API support)
+     */
+    public function addSignatureVersion(ChildSignatureVersion $l)
+    {
+        if ($this->collSignatureVersions === null) {
+            $this->initSignatureVersions();
+            $this->collSignatureVersionsPartial = true;
+        }
+
+        if (!$this->collSignatureVersions->contains($l)) {
+            $this->doAddSignatureVersion($l);
+
+            if ($this->signatureVersionsScheduledForDeletion and $this->signatureVersionsScheduledForDeletion->contains($l)) {
+                $this->signatureVersionsScheduledForDeletion->remove($this->signatureVersionsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildSignatureVersion $signatureVersion The ChildSignatureVersion object to add.
+     */
+    protected function doAddSignatureVersion(ChildSignatureVersion $signatureVersion)
+    {
+        $this->collSignatureVersions[]= $signatureVersion;
+        $signatureVersion->setSignature($this);
+    }
+
+    /**
+     * @param  ChildSignatureVersion $signatureVersion The ChildSignatureVersion object to remove.
+     * @return $this|ChildSignature The current object (for fluent API support)
+     */
+    public function removeSignatureVersion(ChildSignatureVersion $signatureVersion)
+    {
+        if ($this->getSignatureVersions()->contains($signatureVersion)) {
+            $pos = $this->collSignatureVersions->search($signatureVersion);
+            $this->collSignatureVersions->remove($pos);
+            if (null === $this->signatureVersionsScheduledForDeletion) {
+                $this->signatureVersionsScheduledForDeletion = clone $this->collSignatureVersions;
+                $this->signatureVersionsScheduledForDeletion->clear();
+            }
+            $this->signatureVersionsScheduledForDeletion[]= clone $signatureVersion;
+            $signatureVersion->setSignature(null);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Clears out the collTags collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addTags()
+     */
+    public function clearTags()
+    {
+        $this->collTags = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Initializes the collTags crossRef collection.
+     *
+     * By default this just sets the collTags collection to an empty collection (like clearTags());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @return void
+     */
+    public function initTags()
+    {
+        $collectionClassName = SignatureTagTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collTags = new $collectionClassName;
+        $this->collTagsPartial = true;
+        $this->collTags->setModel('\Ncanode\Model\Tag');
+    }
+
+    /**
+     * Checks if the collTags collection is loaded.
+     *
+     * @return bool
+     */
+    public function isTagsLoaded()
+    {
+        return null !== $this->collTags;
+    }
+
+    /**
+     * Gets a collection of ChildTag objects related by a many-to-many relationship
+     * to the current object by way of the ncanode_signature_tag cross-reference table.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildSignature is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria Optional query object to filter the query
+     * @param      ConnectionInterface $con Optional connection object
+     *
+     * @return ObjectCollection|ChildTag[] List of ChildTag objects
+     */
+    public function getTags(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collTagsPartial && !$this->isNew();
+        if (null === $this->collTags || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collTags) {
+                    $this->initTags();
+                }
+            } else {
+
+                $query = ChildTagQuery::create(null, $criteria)
+                    ->filterBySignature($this);
+                $collTags = $query->find($con);
+                if (null !== $criteria) {
+                    return $collTags;
+                }
+
+                if ($partial && $this->collTags) {
+                    //make sure that already added objects gets added to the list of the database.
+                    foreach ($this->collTags as $obj) {
+                        if (!$collTags->contains($obj)) {
+                            $collTags[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collTags = $collTags;
+                $this->collTagsPartial = false;
+            }
+        }
+
+        return $this->collTags;
+    }
+
+    /**
+     * Sets a collection of Tag objects related by a many-to-many relationship
+     * to the current object by way of the ncanode_signature_tag cross-reference table.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param  Collection $tags A Propel collection.
+     * @param  ConnectionInterface $con Optional connection object
+     * @return $this|ChildSignature The current object (for fluent API support)
+     */
+    public function setTags(Collection $tags, ConnectionInterface $con = null)
+    {
+        $this->clearTags();
+        $currentTags = $this->getTags();
+
+        $tagsScheduledForDeletion = $currentTags->diff($tags);
+
+        foreach ($tagsScheduledForDeletion as $toDelete) {
+            $this->removeTag($toDelete);
+        }
+
+        foreach ($tags as $tag) {
+            if (!$currentTags->contains($tag)) {
+                $this->doAddTag($tag);
+            }
+        }
+
+        $this->collTagsPartial = false;
+        $this->collTags = $tags;
+
+        return $this;
+    }
+
+    /**
+     * Gets the number of Tag objects related by a many-to-many relationship
+     * to the current object by way of the ncanode_signature_tag cross-reference table.
+     *
+     * @param      Criteria $criteria Optional query object to filter the query
+     * @param      boolean $distinct Set to true to force count distinct
+     * @param      ConnectionInterface $con Optional connection object
+     *
+     * @return int the number of related Tag objects
+     */
+    public function countTags(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collTagsPartial && !$this->isNew();
+        if (null === $this->collTags || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collTags) {
+                return 0;
+            } else {
+
+                if ($partial && !$criteria) {
+                    return count($this->getTags());
+                }
+
+                $query = ChildTagQuery::create(null, $criteria);
+                if ($distinct) {
+                    $query->distinct();
+                }
+
+                return $query
+                    ->filterBySignature($this)
+                    ->count($con);
+            }
+        } else {
+            return count($this->collTags);
+        }
+    }
+
+    /**
+     * Associate a ChildTag to this object
+     * through the ncanode_signature_tag cross reference table.
+     *
+     * @param ChildTag $tag
+     * @return ChildSignature The current object (for fluent API support)
+     */
+    public function addTag(ChildTag $tag)
+    {
+        if ($this->collTags === null) {
+            $this->initTags();
+        }
+
+        if (!$this->getTags()->contains($tag)) {
+            // only add it if the **same** object is not already associated
+            $this->collTags->push($tag);
+            $this->doAddTag($tag);
+        }
+
+        return $this;
+    }
+
+    /**
+     *
+     * @param ChildTag $tag
+     */
+    protected function doAddTag(ChildTag $tag)
+    {
+        $signatureTag = new ChildSignatureTag();
+
+        $signatureTag->setTag($tag);
+
+        $signatureTag->setSignature($this);
+
+        $this->addSignatureTag($signatureTag);
+
+        // set the back reference to this object directly as using provided method either results
+        // in endless loop or in multiple relations
+        if (!$tag->isSignaturesLoaded()) {
+            $tag->initSignatures();
+            $tag->getSignatures()->push($this);
+        } elseif (!$tag->getSignatures()->contains($this)) {
+            $tag->getSignatures()->push($this);
+        }
+
+    }
+
+    /**
+     * Remove tag of this object
+     * through the ncanode_signature_tag cross reference table.
+     *
+     * @param ChildTag $tag
+     * @return ChildSignature The current object (for fluent API support)
+     */
+    public function removeTag(ChildTag $tag)
+    {
+        if ($this->getTags()->contains($tag)) {
+            $signatureTag = new ChildSignatureTag();
+            $signatureTag->setTag($tag);
+            if ($tag->isSignaturesLoaded()) {
+                //remove the back reference if available
+                $tag->getSignatures()->removeObject($this);
+            }
+
+            $signatureTag->setSignature($this);
+            $this->removeSignatureTag(clone $signatureTag);
+            $signatureTag->clear();
+
+            $this->collTags->remove($this->collTags->search($tag));
+
+            if (null === $this->tagsScheduledForDeletion) {
+                $this->tagsScheduledForDeletion = clone $this->collTags;
+                $this->tagsScheduledForDeletion->clear();
+            }
+
+            $this->tagsScheduledForDeletion->push($tag);
+        }
+
+
+        return $this;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
      */
     public function clear()
     {
-        if (null !== $this->aParent) {
-            $this->aParent->removeSignatureRelatedById($this);
-        }
         $this->id = null;
         $this->document = null;
-        $this->chain = null;
-        $this->stage = null;
-        $this->parent_id = null;
-        $this->signature = null;
+        $this->thread = null;
+        $this->cms = null;
         $this->created_at = null;
         $this->updated_at = null;
+        $this->version = null;
+        $this->version_created_at = null;
+        $this->version_created_by = null;
+        $this->version_comment = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
+        $this->applyDefaultValues();
         $this->resetModified();
         $this->setNew(true);
         $this->setDeleted(false);
@@ -2144,21 +2524,26 @@ abstract class Signature implements ActiveRecordInterface
     public function clearAllReferences($deep = false)
     {
         if ($deep) {
-            if ($this->collSignaturesRelatedById) {
-                foreach ($this->collSignaturesRelatedById as $o) {
-                    $o->clearAllReferences($deep);
-                }
-            }
             if ($this->collSignatureTags) {
                 foreach ($this->collSignatureTags as $o) {
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collSignatureVersions) {
+                foreach ($this->collSignatureVersions as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collTags) {
+                foreach ($this->collTags as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
-        $this->collSignaturesRelatedById = null;
         $this->collSignatureTags = null;
-        $this->aParent = null;
+        $this->collSignatureVersions = null;
+        $this->collTags = null;
     }
 
     /**
@@ -2185,6 +2570,297 @@ abstract class Signature implements ActiveRecordInterface
         return $this;
     }
 
+    // versionable behavior
+
+    /**
+     * Enforce a new Version of this object upon next save.
+     *
+     * @return $this|\Ncanode\Model\Signature
+     */
+    public function enforceVersioning()
+    {
+        $this->enforceVersion = true;
+
+        return $this;
+    }
+
+    /**
+     * Checks whether the current state must be recorded as a version
+     *
+     * @param   ConnectionInterface $con The ConnectionInterface connection to use.
+     * @return  boolean
+     */
+    public function isVersioningNecessary(ConnectionInterface $con = null)
+    {
+        if ($this->alreadyInSave) {
+            return false;
+        }
+
+        if ($this->enforceVersion) {
+            return true;
+        }
+
+        if (ChildSignatureQuery::isVersioningEnabled() && ($this->isNew() || $this->isModified()) || $this->isDeleted()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Creates a version of the current object and saves it.
+     *
+     * @param   ConnectionInterface $con The ConnectionInterface connection to use.
+     *
+     * @return  ChildSignatureVersion A version object
+     */
+    public function addVersion(ConnectionInterface $con = null)
+    {
+        $this->enforceVersion = false;
+
+        $version = new ChildSignatureVersion();
+        $version->setId($this->getId());
+        $version->setDocument($this->getDocument());
+        $version->setThread($this->getThread());
+        $version->setCms($this->getCms());
+        $version->setCreatedAt($this->getCreatedAt());
+        $version->setUpdatedAt($this->getUpdatedAt());
+        $version->setVersion($this->getVersion());
+        $version->setVersionCreatedAt($this->getVersionCreatedAt());
+        $version->setVersionCreatedBy($this->getVersionCreatedBy());
+        $version->setVersionComment($this->getVersionComment());
+        $version->setSignature($this);
+        $version->save($con);
+
+        return $version;
+    }
+
+    /**
+     * Sets the properties of the current object to the value they had at a specific version
+     *
+     * @param   integer $versionNumber The version number to read
+     * @param   ConnectionInterface $con The ConnectionInterface connection to use.
+     *
+     * @return  $this|ChildSignature The current object (for fluent API support)
+     */
+    public function toVersion($versionNumber, ConnectionInterface $con = null)
+    {
+        $version = $this->getOneVersion($versionNumber, $con);
+        if (!$version) {
+            throw new PropelException(sprintf('No ChildSignature object found with version %d', $version));
+        }
+        $this->populateFromVersion($version, $con);
+
+        return $this;
+    }
+
+    /**
+     * Sets the properties of the current object to the value they had at a specific version
+     *
+     * @param ChildSignatureVersion $version The version object to use
+     * @param ConnectionInterface   $con the connection to use
+     * @param array                 $loadedObjects objects that been loaded in a chain of populateFromVersion calls on referrer or fk objects.
+     *
+     * @return $this|ChildSignature The current object (for fluent API support)
+     */
+    public function populateFromVersion($version, $con = null, &$loadedObjects = array())
+    {
+        $loadedObjects['ChildSignature'][$version->getId()][$version->getVersion()] = $this;
+        $this->setId($version->getId());
+        $this->setDocument($version->getDocument());
+        $this->setThread($version->getThread());
+        $this->setCms($version->getCms());
+        $this->setCreatedAt($version->getCreatedAt());
+        $this->setUpdatedAt($version->getUpdatedAt());
+        $this->setVersion($version->getVersion());
+        $this->setVersionCreatedAt($version->getVersionCreatedAt());
+        $this->setVersionCreatedBy($version->getVersionCreatedBy());
+        $this->setVersionComment($version->getVersionComment());
+
+        return $this;
+    }
+
+    /**
+     * Gets the latest persisted version number for the current object
+     *
+     * @param   ConnectionInterface $con The ConnectionInterface connection to use.
+     *
+     * @return  integer
+     */
+    public function getLastVersionNumber(ConnectionInterface $con = null)
+    {
+        $v = ChildSignatureVersionQuery::create()
+            ->filterBySignature($this)
+            ->orderByVersion('desc')
+            ->findOne($con);
+        if (!$v) {
+            return 0;
+        }
+
+        return $v->getVersion();
+    }
+
+    /**
+     * Checks whether the current object is the latest one
+     *
+     * @param   ConnectionInterface $con The ConnectionInterface connection to use.
+     *
+     * @return  Boolean
+     */
+    public function isLastVersion(ConnectionInterface $con = null)
+    {
+        return $this->getLastVersionNumber($con) == $this->getVersion();
+    }
+
+    /**
+     * Retrieves a version object for this entity and a version number
+     *
+     * @param   integer $versionNumber The version number to read
+     * @param   ConnectionInterface $con The ConnectionInterface connection to use.
+     *
+     * @return  ChildSignatureVersion A version object
+     */
+    public function getOneVersion($versionNumber, ConnectionInterface $con = null)
+    {
+        return ChildSignatureVersionQuery::create()
+            ->filterBySignature($this)
+            ->filterByVersion($versionNumber)
+            ->findOne($con);
+    }
+
+    /**
+     * Gets all the versions of this object, in incremental order
+     *
+     * @param   ConnectionInterface $con The ConnectionInterface connection to use.
+     *
+     * @return  ObjectCollection|ChildSignatureVersion[] A list of ChildSignatureVersion objects
+     */
+    public function getAllVersions(ConnectionInterface $con = null)
+    {
+        $criteria = new Criteria();
+        $criteria->addAscendingOrderByColumn(SignatureVersionTableMap::COL_VERSION);
+
+        return $this->getSignatureVersions($criteria, $con);
+    }
+
+    /**
+     * Compares the current object with another of its version.
+     * <code>
+     * print_r($book->compareVersion(1));
+     * => array(
+     *   '1' => array('Title' => 'Book title at version 1'),
+     *   '2' => array('Title' => 'Book title at version 2')
+     * );
+     * </code>
+     *
+     * @param   integer             $versionNumber
+     * @param   string              $keys Main key used for the result diff (versions|columns)
+     * @param   ConnectionInterface $con The ConnectionInterface connection to use.
+     * @param   array               $ignoredColumns  The columns to exclude from the diff.
+     *
+     * @return  array A list of differences
+     */
+    public function compareVersion($versionNumber, $keys = 'columns', ConnectionInterface $con = null, $ignoredColumns = array())
+    {
+        $fromVersion = $this->toArray();
+        $toVersion = $this->getOneVersion($versionNumber, $con)->toArray();
+
+        return $this->computeDiff($fromVersion, $toVersion, $keys, $ignoredColumns);
+    }
+
+    /**
+     * Compares two versions of the current object.
+     * <code>
+     * print_r($book->compareVersions(1, 2));
+     * => array(
+     *   '1' => array('Title' => 'Book title at version 1'),
+     *   '2' => array('Title' => 'Book title at version 2')
+     * );
+     * </code>
+     *
+     * @param   integer             $fromVersionNumber
+     * @param   integer             $toVersionNumber
+     * @param   string              $keys Main key used for the result diff (versions|columns)
+     * @param   ConnectionInterface $con The ConnectionInterface connection to use.
+     * @param   array               $ignoredColumns  The columns to exclude from the diff.
+     *
+     * @return  array A list of differences
+     */
+    public function compareVersions($fromVersionNumber, $toVersionNumber, $keys = 'columns', ConnectionInterface $con = null, $ignoredColumns = array())
+    {
+        $fromVersion = $this->getOneVersion($fromVersionNumber, $con)->toArray();
+        $toVersion = $this->getOneVersion($toVersionNumber, $con)->toArray();
+
+        return $this->computeDiff($fromVersion, $toVersion, $keys, $ignoredColumns);
+    }
+
+    /**
+     * Computes the diff between two versions.
+     * <code>
+     * print_r($book->computeDiff(1, 2));
+     * => array(
+     *   '1' => array('Title' => 'Book title at version 1'),
+     *   '2' => array('Title' => 'Book title at version 2')
+     * );
+     * </code>
+     *
+     * @param   array     $fromVersion     An array representing the original version.
+     * @param   array     $toVersion       An array representing the destination version.
+     * @param   string    $keys            Main key used for the result diff (versions|columns).
+     * @param   array     $ignoredColumns  The columns to exclude from the diff.
+     *
+     * @return  array A list of differences
+     */
+    protected function computeDiff($fromVersion, $toVersion, $keys = 'columns', $ignoredColumns = array())
+    {
+        $fromVersionNumber = $fromVersion['Version'];
+        $toVersionNumber = $toVersion['Version'];
+        $ignoredColumns = array_merge(array(
+            'Version',
+            'VersionCreatedAt',
+            'VersionCreatedBy',
+            'VersionComment',
+        ), $ignoredColumns);
+        $diff = array();
+        foreach ($fromVersion as $key => $value) {
+            if (in_array($key, $ignoredColumns)) {
+                continue;
+            }
+            if ($toVersion[$key] != $value) {
+                switch ($keys) {
+                    case 'versions':
+                        $diff[$fromVersionNumber][$key] = $value;
+                        $diff[$toVersionNumber][$key] = $toVersion[$key];
+                        break;
+                    default:
+                        $diff[$key] = array(
+                            $fromVersionNumber => $value,
+                            $toVersionNumber => $toVersion[$key],
+                        );
+                        break;
+                }
+            }
+        }
+
+        return $diff;
+    }
+    /**
+     * retrieve the last $number versions.
+     *
+     * @param  Integer             $number The number of record to return.
+     * @param  Criteria            $criteria The Criteria object containing modified values.
+     * @param  ConnectionInterface $con The ConnectionInterface connection to use.
+     *
+     * @return PropelCollection|\Ncanode\Model\SignatureVersion[] List of \Ncanode\Model\SignatureVersion objects
+     */
+    public function getLastVersions($number = 10, $criteria = null, ConnectionInterface $con = null)
+    {
+        $criteria = ChildSignatureVersionQuery::create(null, $criteria);
+        $criteria->addDescendingOrderByColumn(SignatureVersionTableMap::COL_VERSION);
+        $criteria->limit($number);
+
+        return $this->getSignatureVersions($criteria, $con);
+    }
     /**
      * Code to be run before persisting the object
      * @param  ConnectionInterface $con

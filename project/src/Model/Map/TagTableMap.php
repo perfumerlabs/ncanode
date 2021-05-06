@@ -200,6 +200,7 @@ class TagTableMap extends TableMap
     1 => ':id',
   ),
 ), 'CASCADE', 'CASCADE', 'SignatureTags', false);
+        $this->addRelation('Signature', '\\Ncanode\\Model\\Signature', RelationMap::MANY_TO_MANY, array(), 'CASCADE', 'CASCADE', 'Signatures');
     } // buildRelations()
 
     /**

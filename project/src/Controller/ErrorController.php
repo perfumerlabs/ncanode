@@ -2,13 +2,8 @@
 
 namespace Ncanode\Controller;
 
-use Perfumer\Framework\Controller\ViewController;
-use Perfumer\Framework\View\StatusViewControllerHelpers;
-
-class ErrorController extends ViewController
+class ErrorController extends LayoutController
 {
-    use StatusViewControllerHelpers;
-
     public function badRequest($message)
     {
         $this->getExternalResponse()->setStatusCode(400);
@@ -16,16 +11,26 @@ class ErrorController extends ViewController
         $this->setErrorMessage($message);
     }
 
-    public function internalServerError($e)
+    public function pageNotFound($message)
+    {
+        $this->getExternalResponse()->setStatusCode(404);
+
+        $this->setErrorMessage($message);
+    }
+
+    public function accessDenied()
+    {
+        $this->getExternalResponse()->setStatusCode(403);
+
+        $this->setErrorMessage('Access denied');
+    }
+
+    public function internalServerError(\Throwable $e)
     {
         $this->getExternalResponse()->setStatusCode(500);
 
-        if ($e instanceof \Throwable) {
-            $this->setErrorMessage($e->getMessage());
+        $this->setErrorMessage($e->getMessage());
 
-            error_log($e->getMessage());
-        } else {
-            $this->setErrorMessage((string) $e);
-        }
+        error_log($e->getMessage());
     }
 }

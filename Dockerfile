@@ -33,6 +33,7 @@ RUN set -x \
         php7.4-opcache \
         php7.4-pgsql \
         php7.4-xml \
+        php7.4-mbstring \
         supervisor \
         vim \
         iputils-ping \

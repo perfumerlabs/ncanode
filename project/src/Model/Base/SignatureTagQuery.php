@@ -20,13 +20,11 @@ use Propel\Runtime\Exception\PropelException;
  *
  *
  *
- * @method     ChildSignatureTagQuery orderById($order = Criteria::ASC) Order by the id column
  * @method     ChildSignatureTagQuery orderBySignatureId($order = Criteria::ASC) Order by the signature_id column
  * @method     ChildSignatureTagQuery orderByTagId($order = Criteria::ASC) Order by the tag_id column
  * @method     ChildSignatureTagQuery orderByCreatedAt($order = Criteria::ASC) Order by the created_at column
  * @method     ChildSignatureTagQuery orderByUpdatedAt($order = Criteria::ASC) Order by the updated_at column
  *
- * @method     ChildSignatureTagQuery groupById() Group by the id column
  * @method     ChildSignatureTagQuery groupBySignatureId() Group by the signature_id column
  * @method     ChildSignatureTagQuery groupByTagId() Group by the tag_id column
  * @method     ChildSignatureTagQuery groupByCreatedAt() Group by the created_at column
@@ -65,7 +63,6 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildSignatureTag|null findOne(ConnectionInterface $con = null) Return the first ChildSignatureTag matching the query
  * @method     ChildSignatureTag findOneOrCreate(ConnectionInterface $con = null) Return the first ChildSignatureTag matching the query, or a new ChildSignatureTag object populated from the query conditions when no match is found
  *
- * @method     ChildSignatureTag|null findOneById(int $id) Return the first ChildSignatureTag filtered by the id column
  * @method     ChildSignatureTag|null findOneBySignatureId(int $signature_id) Return the first ChildSignatureTag filtered by the signature_id column
  * @method     ChildSignatureTag|null findOneByTagId(int $tag_id) Return the first ChildSignatureTag filtered by the tag_id column
  * @method     ChildSignatureTag|null findOneByCreatedAt(string $created_at) Return the first ChildSignatureTag filtered by the created_at column
@@ -74,14 +71,12 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildSignatureTag requirePk($key, ConnectionInterface $con = null) Return the ChildSignatureTag by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSignatureTag requireOne(ConnectionInterface $con = null) Return the first ChildSignatureTag matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
- * @method     ChildSignatureTag requireOneById(int $id) Return the first ChildSignatureTag filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSignatureTag requireOneBySignatureId(int $signature_id) Return the first ChildSignatureTag filtered by the signature_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSignatureTag requireOneByTagId(int $tag_id) Return the first ChildSignatureTag filtered by the tag_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSignatureTag requireOneByCreatedAt(string $created_at) Return the first ChildSignatureTag filtered by the created_at column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSignatureTag requireOneByUpdatedAt(string $updated_at) Return the first ChildSignatureTag filtered by the updated_at column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildSignatureTag[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildSignatureTag objects based on current ModelCriteria
- * @method     ChildSignatureTag[]|ObjectCollection findById(int $id) Return ChildSignatureTag objects filtered by the id column
  * @method     ChildSignatureTag[]|ObjectCollection findBySignatureId(int $signature_id) Return ChildSignatureTag objects filtered by the signature_id column
  * @method     ChildSignatureTag[]|ObjectCollection findByTagId(int $tag_id) Return ChildSignatureTag objects filtered by the tag_id column
  * @method     ChildSignatureTag[]|ObjectCollection findByCreatedAt(string $created_at) Return ChildSignatureTag objects filtered by the created_at column
@@ -135,10 +130,10 @@ abstract class SignatureTagQuery extends ModelCriteria
      * Go fast if the query is untouched.
      *
      * <code>
-     * $obj  = $c->findPk(12, $con);
+     * $obj = $c->findPk(array(12, 34), $con);
      * </code>
      *
-     * @param mixed $key Primary key to use for the query
+     * @param array[$signature_id, $tag_id] $key Primary key to use for the query
      * @param ConnectionInterface $con an optional connection object
      *
      * @return ChildSignatureTag|array|mixed the result, formatted by the current formatter
@@ -163,7 +158,7 @@ abstract class SignatureTagQuery extends ModelCriteria
             return $this->findPkComplex($key, $con);
         }
 
-        if ((null !== ($obj = SignatureTagTableMap::getInstanceFromPool(null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key)))) {
+        if ((null !== ($obj = SignatureTagTableMap::getInstanceFromPool(serialize([(null === $key[0] || is_scalar($key[0]) || is_callable([$key[0], '__toString']) ? (string) $key[0] : $key[0]), (null === $key[1] || is_scalar($key[1]) || is_callable([$key[1], '__toString']) ? (string) $key[1] : $key[1])]))))) {
             // the object is already in the instance pool
             return $obj;
         }
@@ -184,10 +179,11 @@ abstract class SignatureTagQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, signature_id, tag_id, created_at, updated_at FROM ncanode_signature_tag WHERE id = :p0';
+        $sql = 'SELECT signature_id, tag_id, created_at, updated_at FROM ncanode_signature_tag WHERE signature_id = :p0 AND tag_id = :p1';
         try {
             $stmt = $con->prepare($sql);
-            $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
+            $stmt->bindValue(':p0', $key[0], PDO::PARAM_INT);
+            $stmt->bindValue(':p1', $key[1], PDO::PARAM_INT);
             $stmt->execute();
         } catch (Exception $e) {
             Propel::log($e->getMessage(), Propel::LOG_ERR);
@@ -198,7 +194,7 @@ abstract class SignatureTagQuery extends ModelCriteria
             /** @var ChildSignatureTag $obj */
             $obj = new ChildSignatureTag();
             $obj->hydrate($row);
-            SignatureTagTableMap::addInstanceToPool($obj, null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key);
+            SignatureTagTableMap::addInstanceToPool($obj, serialize([(null === $key[0] || is_scalar($key[0]) || is_callable([$key[0], '__toString']) ? (string) $key[0] : $key[0]), (null === $key[1] || is_scalar($key[1]) || is_callable([$key[1], '__toString']) ? (string) $key[1] : $key[1])]));
         }
         $stmt->closeCursor();
 
@@ -227,7 +223,7 @@ abstract class SignatureTagQuery extends ModelCriteria
     /**
      * Find objects by primary key
      * <code>
-     * $objs = $c->findPks(array(12, 56, 832), $con);
+     * $objs = $c->findPks(array(array(12, 56), array(832, 123), array(123, 456)), $con);
      * </code>
      * @param     array $keys Primary keys to use for the query
      * @param     ConnectionInterface $con an optional connection object
@@ -257,8 +253,10 @@ abstract class SignatureTagQuery extends ModelCriteria
      */
     public function filterByPrimaryKey($key)
     {
+        $this->addUsingAlias(SignatureTagTableMap::COL_SIGNATURE_ID, $key[0], Criteria::EQUAL);
+        $this->addUsingAlias(SignatureTagTableMap::COL_TAG_ID, $key[1], Criteria::EQUAL);
 
-        return $this->addUsingAlias(SignatureTagTableMap::COL_ID, $key, Criteria::EQUAL);
+        return $this;
     }
 
     /**
@@ -270,49 +268,17 @@ abstract class SignatureTagQuery extends ModelCriteria
      */
     public function filterByPrimaryKeys($keys)
     {
-
-        return $this->addUsingAlias(SignatureTagTableMap::COL_ID, $keys, Criteria::IN);
-    }
-
-    /**
-     * Filter the query on the id column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterById(1234); // WHERE id = 1234
-     * $query->filterById(array(12, 34)); // WHERE id IN (12, 34)
-     * $query->filterById(array('min' => 12)); // WHERE id > 12
-     * </code>
-     *
-     * @param     mixed $id The value to use as filter.
-     *              Use scalar values for equality.
-     *              Use array values for in_array() equivalent.
-     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this|ChildSignatureTagQuery The current query, for fluid interface
-     */
-    public function filterById($id = null, $comparison = null)
-    {
-        if (is_array($id)) {
-            $useMinMax = false;
-            if (isset($id['min'])) {
-                $this->addUsingAlias(SignatureTagTableMap::COL_ID, $id['min'], Criteria::GREATER_EQUAL);
-                $useMinMax = true;
-            }
-            if (isset($id['max'])) {
-                $this->addUsingAlias(SignatureTagTableMap::COL_ID, $id['max'], Criteria::LESS_EQUAL);
-                $useMinMax = true;
-            }
-            if ($useMinMax) {
-                return $this;
-            }
-            if (null === $comparison) {
-                $comparison = Criteria::IN;
-            }
+        if (empty($keys)) {
+            return $this->add(null, '1<>1', Criteria::CUSTOM);
+        }
+        foreach ($keys as $key) {
+            $cton0 = $this->getNewCriterion(SignatureTagTableMap::COL_SIGNATURE_ID, $key[0], Criteria::EQUAL);
+            $cton1 = $this->getNewCriterion(SignatureTagTableMap::COL_TAG_ID, $key[1], Criteria::EQUAL);
+            $cton0->addAnd($cton1);
+            $this->addOr($cton0);
         }
 
-        return $this->addUsingAlias(SignatureTagTableMap::COL_ID, $id, $comparison);
+        return $this;
     }
 
     /**
@@ -651,7 +617,9 @@ abstract class SignatureTagQuery extends ModelCriteria
     public function prune($signatureTag = null)
     {
         if ($signatureTag) {
-            $this->addUsingAlias(SignatureTagTableMap::COL_ID, $signatureTag->getId(), Criteria::NOT_EQUAL);
+            $this->addCond('pruneCond0', $this->getAliasedColName(SignatureTagTableMap::COL_SIGNATURE_ID), $signatureTag->getSignatureId(), Criteria::NOT_EQUAL);
+            $this->addCond('pruneCond1', $this->getAliasedColName(SignatureTagTableMap::COL_TAG_ID), $signatureTag->getTagId(), Criteria::NOT_EQUAL);
+            $this->combine(array('pruneCond0', 'pruneCond1'), Criteria::LOGICAL_OR);
         }
 
         return $this;

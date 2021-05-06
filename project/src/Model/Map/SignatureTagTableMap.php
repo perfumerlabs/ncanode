@@ -58,7 +58,7 @@ class SignatureTagTableMap extends TableMap
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 5;
+    const NUM_COLUMNS = 4;
 
     /**
      * The number of lazy-loaded columns
@@ -68,12 +68,7 @@ class SignatureTagTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 5;
-
-    /**
-     * the column name for the id field
-     */
-    const COL_ID = 'ncanode_signature_tag.id';
+    const NUM_HYDRATE_COLUMNS = 4;
 
     /**
      * the column name for the signature_id field
@@ -107,11 +102,11 @@ class SignatureTagTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'SignatureId', 'TagId', 'CreatedAt', 'UpdatedAt', ),
-        self::TYPE_CAMELNAME     => array('id', 'signatureId', 'tagId', 'createdAt', 'updatedAt', ),
-        self::TYPE_COLNAME       => array(SignatureTagTableMap::COL_ID, SignatureTagTableMap::COL_SIGNATURE_ID, SignatureTagTableMap::COL_TAG_ID, SignatureTagTableMap::COL_CREATED_AT, SignatureTagTableMap::COL_UPDATED_AT, ),
-        self::TYPE_FIELDNAME     => array('id', 'signature_id', 'tag_id', 'created_at', 'updated_at', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, )
+        self::TYPE_PHPNAME       => array('SignatureId', 'TagId', 'CreatedAt', 'UpdatedAt', ),
+        self::TYPE_CAMELNAME     => array('signatureId', 'tagId', 'createdAt', 'updatedAt', ),
+        self::TYPE_COLNAME       => array(SignatureTagTableMap::COL_SIGNATURE_ID, SignatureTagTableMap::COL_TAG_ID, SignatureTagTableMap::COL_CREATED_AT, SignatureTagTableMap::COL_UPDATED_AT, ),
+        self::TYPE_FIELDNAME     => array('signature_id', 'tag_id', 'created_at', 'updated_at', ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, )
     );
 
     /**
@@ -121,11 +116,11 @@ class SignatureTagTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'SignatureId' => 1, 'TagId' => 2, 'CreatedAt' => 3, 'UpdatedAt' => 4, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'signatureId' => 1, 'tagId' => 2, 'createdAt' => 3, 'updatedAt' => 4, ),
-        self::TYPE_COLNAME       => array(SignatureTagTableMap::COL_ID => 0, SignatureTagTableMap::COL_SIGNATURE_ID => 1, SignatureTagTableMap::COL_TAG_ID => 2, SignatureTagTableMap::COL_CREATED_AT => 3, SignatureTagTableMap::COL_UPDATED_AT => 4, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'signature_id' => 1, 'tag_id' => 2, 'created_at' => 3, 'updated_at' => 4, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, )
+        self::TYPE_PHPNAME       => array('SignatureId' => 0, 'TagId' => 1, 'CreatedAt' => 2, 'UpdatedAt' => 3, ),
+        self::TYPE_CAMELNAME     => array('signatureId' => 0, 'tagId' => 1, 'createdAt' => 2, 'updatedAt' => 3, ),
+        self::TYPE_COLNAME       => array(SignatureTagTableMap::COL_SIGNATURE_ID => 0, SignatureTagTableMap::COL_TAG_ID => 1, SignatureTagTableMap::COL_CREATED_AT => 2, SignatureTagTableMap::COL_UPDATED_AT => 3, ),
+        self::TYPE_FIELDNAME     => array('signature_id' => 0, 'tag_id' => 1, 'created_at' => 2, 'updated_at' => 3, ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, )
     );
 
     /**
@@ -135,14 +130,6 @@ class SignatureTagTableMap extends TableMap
      */
     protected $normalizedColumnNameMap = [
 
-        'Id' => 'ID',
-        'SignatureTag.Id' => 'ID',
-        'id' => 'ID',
-        'signatureTag.id' => 'ID',
-        'SignatureTagTableMap::COL_ID' => 'ID',
-        'COL_ID' => 'ID',
-        'id' => 'ID',
-        'ncanode_signature_tag.id' => 'ID',
         'SignatureId' => 'SIGNATURE_ID',
         'SignatureTag.SignatureId' => 'SIGNATURE_ID',
         'signatureId' => 'SIGNATURE_ID',
@@ -192,12 +179,11 @@ class SignatureTagTableMap extends TableMap
         $this->setIdentifierQuoting(false);
         $this->setClassName('\\Ncanode\\Model\\SignatureTag');
         $this->setPackage('');
-        $this->setUseIdGenerator(true);
-        $this->setPrimaryKeyMethodInfo('ncanode_signature_tag_id_seq');
+        $this->setUseIdGenerator(false);
+        $this->setIsCrossRef(true);
         // columns
-        $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addForeignKey('signature_id', 'SignatureId', 'INTEGER', 'ncanode_signature', 'id', true, null, null);
-        $this->addForeignKey('tag_id', 'TagId', 'INTEGER', 'ncanode_tag', 'id', true, null, null);
+        $this->addForeignPrimaryKey('signature_id', 'SignatureId', 'INTEGER' , 'ncanode_signature', 'id', true, null, null);
+        $this->addForeignPrimaryKey('tag_id', 'TagId', 'INTEGER' , 'ncanode_tag', 'id', true, null, null);
         $this->addColumn('created_at', 'CreatedAt', 'TIMESTAMP', false, null, null);
         $this->addColumn('updated_at', 'UpdatedAt', 'TIMESTAMP', false, null, null);
     } // initialize()
@@ -237,6 +223,59 @@ class SignatureTagTableMap extends TableMap
     } // getBehaviors()
 
     /**
+     * Adds an object to the instance pool.
+     *
+     * Propel keeps cached copies of objects in an instance pool when they are retrieved
+     * from the database. In some cases you may need to explicitly add objects
+     * to the cache in order to ensure that the same objects are always returned by find*()
+     * and findPk*() calls.
+     *
+     * @param \Ncanode\Model\SignatureTag $obj A \Ncanode\Model\SignatureTag object.
+     * @param string $key             (optional) key to use for instance map (for performance boost if key was already calculated externally).
+     */
+    public static function addInstanceToPool($obj, $key = null)
+    {
+        if (Propel::isInstancePoolingEnabled()) {
+            if (null === $key) {
+                $key = serialize([(null === $obj->getSignatureId() || is_scalar($obj->getSignatureId()) || is_callable([$obj->getSignatureId(), '__toString']) ? (string) $obj->getSignatureId() : $obj->getSignatureId()), (null === $obj->getTagId() || is_scalar($obj->getTagId()) || is_callable([$obj->getTagId(), '__toString']) ? (string) $obj->getTagId() : $obj->getTagId())]);
+            } // if key === null
+            self::$instances[$key] = $obj;
+        }
+    }
+
+    /**
+     * Removes an object from the instance pool.
+     *
+     * Propel keeps cached copies of objects in an instance pool when they are retrieved
+     * from the database.  In some cases -- especially when you override doDelete
+     * methods in your stub classes -- you may need to explicitly remove objects
+     * from the cache in order to prevent returning objects that no longer exist.
+     *
+     * @param mixed $value A \Ncanode\Model\SignatureTag object or a primary key value.
+     */
+    public static function removeInstanceFromPool($value)
+    {
+        if (Propel::isInstancePoolingEnabled() && null !== $value) {
+            if (is_object($value) && $value instanceof \Ncanode\Model\SignatureTag) {
+                $key = serialize([(null === $value->getSignatureId() || is_scalar($value->getSignatureId()) || is_callable([$value->getSignatureId(), '__toString']) ? (string) $value->getSignatureId() : $value->getSignatureId()), (null === $value->getTagId() || is_scalar($value->getTagId()) || is_callable([$value->getTagId(), '__toString']) ? (string) $value->getTagId() : $value->getTagId())]);
+
+            } elseif (is_array($value) && count($value) === 2) {
+                // assume we've been passed a primary key";
+                $key = serialize([(null === $value[0] || is_scalar($value[0]) || is_callable([$value[0], '__toString']) ? (string) $value[0] : $value[0]), (null === $value[1] || is_scalar($value[1]) || is_callable([$value[1], '__toString']) ? (string) $value[1] : $value[1])]);
+            } elseif ($value instanceof Criteria) {
+                self::$instances = [];
+
+                return;
+            } else {
+                $e = new PropelException("Invalid value passed to removeInstanceFromPool().  Expected primary key or \Ncanode\Model\SignatureTag object; got " . (is_object($value) ? get_class($value) . ' object.' : var_export($value, true)));
+                throw $e;
+            }
+
+            unset(self::$instances[$key]);
+        }
+    }
+
+    /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.
      *
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
@@ -252,11 +291,11 @@ class SignatureTagTableMap extends TableMap
     public static function getPrimaryKeyHashFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
     {
         // If the PK cannot be derived from the row, return NULL.
-        if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)] === null) {
+        if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('SignatureId', TableMap::TYPE_PHPNAME, $indexType)] === null && $row[TableMap::TYPE_NUM == $indexType ? 1 + $offset : static::translateFieldName('TagId', TableMap::TYPE_PHPNAME, $indexType)] === null) {
             return null;
         }
 
-        return null === $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
+        return serialize([(null === $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('SignatureId', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('SignatureId', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('SignatureId', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('SignatureId', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('SignatureId', TableMap::TYPE_PHPNAME, $indexType)]), (null === $row[TableMap::TYPE_NUM == $indexType ? 1 + $offset : static::translateFieldName('TagId', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 1 + $offset : static::translateFieldName('TagId', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 1 + $offset : static::translateFieldName('TagId', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 1 + $offset : static::translateFieldName('TagId', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 1 + $offset : static::translateFieldName('TagId', TableMap::TYPE_PHPNAME, $indexType)])]);
     }
 
     /**
@@ -273,11 +312,20 @@ class SignatureTagTableMap extends TableMap
      */
     public static function getPrimaryKeyFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
     {
-        return (int) $row[
+            $pks = [];
+
+        $pks[] = (int) $row[
             $indexType == TableMap::TYPE_NUM
                 ? 0 + $offset
-                : self::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)
+                : self::translateFieldName('SignatureId', TableMap::TYPE_PHPNAME, $indexType)
         ];
+        $pks[] = (int) $row[
+            $indexType == TableMap::TYPE_NUM
+                ? 1 + $offset
+                : self::translateFieldName('TagId', TableMap::TYPE_PHPNAME, $indexType)
+        ];
+
+        return $pks;
     }
 
     /**
@@ -377,13 +425,11 @@ class SignatureTagTableMap extends TableMap
     public static function addSelectColumns(Criteria $criteria, $alias = null)
     {
         if (null === $alias) {
-            $criteria->addSelectColumn(SignatureTagTableMap::COL_ID);
             $criteria->addSelectColumn(SignatureTagTableMap::COL_SIGNATURE_ID);
             $criteria->addSelectColumn(SignatureTagTableMap::COL_TAG_ID);
             $criteria->addSelectColumn(SignatureTagTableMap::COL_CREATED_AT);
             $criteria->addSelectColumn(SignatureTagTableMap::COL_UPDATED_AT);
         } else {
-            $criteria->addSelectColumn($alias . '.id');
             $criteria->addSelectColumn($alias . '.signature_id');
             $criteria->addSelectColumn($alias . '.tag_id');
             $criteria->addSelectColumn($alias . '.created_at');
@@ -405,13 +451,11 @@ class SignatureTagTableMap extends TableMap
     public static function removeSelectColumns(Criteria $criteria, $alias = null)
     {
         if (null === $alias) {
-            $criteria->removeSelectColumn(SignatureTagTableMap::COL_ID);
             $criteria->removeSelectColumn(SignatureTagTableMap::COL_SIGNATURE_ID);
             $criteria->removeSelectColumn(SignatureTagTableMap::COL_TAG_ID);
             $criteria->removeSelectColumn(SignatureTagTableMap::COL_CREATED_AT);
             $criteria->removeSelectColumn(SignatureTagTableMap::COL_UPDATED_AT);
         } else {
-            $criteria->removeSelectColumn($alias . '.id');
             $criteria->removeSelectColumn($alias . '.signature_id');
             $criteria->removeSelectColumn($alias . '.tag_id');
             $criteria->removeSelectColumn($alias . '.created_at');
@@ -467,7 +511,17 @@ class SignatureTagTableMap extends TableMap
             $criteria = $values->buildPkeyCriteria();
         } else { // it's a primary key, or an array of pks
             $criteria = new Criteria(SignatureTagTableMap::DATABASE_NAME);
-            $criteria->add(SignatureTagTableMap::COL_ID, (array) $values, Criteria::IN);
+            // primary key is composite; we therefore, expect
+            // the primary key passed to be an array of pkey values
+            if (count($values) == count($values, COUNT_RECURSIVE)) {
+                // array is not multi-dimensional
+                $values = array($values);
+            }
+            foreach ($values as $value) {
+                $criterion = $criteria->getNewCriterion(SignatureTagTableMap::COL_SIGNATURE_ID, $value[0]);
+                $criterion->addAnd($criteria->getNewCriterion(SignatureTagTableMap::COL_TAG_ID, $value[1]));
+                $criteria->addOr($criterion);
+            }
         }
 
         $query = SignatureTagQuery::create()->mergeWith($criteria);
@@ -513,10 +567,6 @@ class SignatureTagTableMap extends TableMap
             $criteria = clone $criteria; // rename for clarity
         } else {
             $criteria = $criteria->buildCriteria(); // build Criteria from SignatureTag object
-        }
-
-        if ($criteria->containsKey(SignatureTagTableMap::COL_ID) && $criteria->keyContainsValue(SignatureTagTableMap::COL_ID) ) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key ('.SignatureTagTableMap::COL_ID.')');
         }
 
 

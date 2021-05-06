@@ -3,118 +3,54 @@
 namespace Ncanode\Domain;
 
 use Ncanode\Model\Signature;
-use Ncanode\Model\SignatureQuery;
-use Ncanode\Model\SignatureTagQuery;
-use Ncanode\Model\Tag;
 use Ncanode\Model\TagQuery;
+use Propel\Runtime\Collection\Collection;
 
 class SignatureDomain
 {
-    public function save(array $data): ?Signature
+    public function create(?Signature $obj, array $data): ?Signature
     {
-        $id = $data['id'] ?? null;
+        $document = $data['document'] ?? null;
+        $thread = $data['thread'] ?? null;
+        $cms = $data['cms'] ?? null;
+        $tags = $data['tags'] ?? [];
+        $version_comment = $data['version_comment'] ?? null;
+        $version_created_by = $data['version_created_by'] ?? null;
 
-        $obj = null;
+        if (!$document || !$thread || !$cms) {
+            return null;
+        }
 
-        if ($id) {
-            $obj = SignatureQuery::create()
-                ->findPk($id);
+        $tag_objs = new Collection();
+
+        foreach ($tags as $tag) {
+            $tag_obj = TagQuery::create()
+                ->filterByCode($tag)
+                ->findOneOrCreate();
+
+            $tag_obj->save();
+
+            $tag_objs->push($tag_obj);
         }
 
         if (!$obj) {
             $obj = new Signature();
         }
 
-        if (array_key_exists('document', $data)) {
-            $obj->setDocument($data['document']);
-        }
-
-        if (array_key_exists('chain', $data)) {
-            $obj->setChain($data['chain']);
-        }
-
-        if (array_key_exists('stage', $data)) {
-            $obj->setStage($data['stage']);
-        }
-
-        if (array_key_exists('parent', $data)) {
-            $parent = null;
-
-            if (is_int($data['parent'])) {
-                $parent = SignatureQuery::create()
-                    ->findPk($data['parent']);
-            } elseif ($data['parent'] instanceof Signature) {
-                $parent = $data['parent'];
-            }
-
-            $obj->setParent($parent);
-        }
-
-        if (array_key_exists('signature', $data)) {
-            $obj->setSignature($data['signature']);
-        }
-
+        $obj->setDocument($document);
+        $obj->setThread($thread);
+        $obj->setCms($cms);
+        $obj->setTags($tag_objs);
+        $obj->setVersionComment($version_comment);
+        $obj->setVersionCreatedAt(new \DateTime());
+        $obj->setVersionCreatedBy($version_created_by);
         $obj->save();
 
         return $obj;
     }
 
-    public function addTag(Signature $obj, $tag)
+    public function delete(Signature $signature)
     {
-        $tag_obj = null;
-        if (is_int($tag)) {
-            $tag_obj = TagQuery::create()
-                ->findPk($tag);
-        } elseif (is_string($tag)) {
-            $tag_obj = TagQuery::create()
-                ->findOneByCode($tag);
-        } elseif ($tag instanceof Tag) {
-            $tag_obj = $tag;
-        }
-
-        if (!$tag_obj) {
-            return;
-        }
-
-        SignatureTagQuery::create()
-            ->filterBySignature($obj)
-            ->filterByTag($tag_obj)
-            ->findOneOrCreate()
-            ->save();
-    }
-
-    public function deleteTag(Signature $obj, $tag)
-    {
-        $tag_obj = null;
-        if (is_int($tag)) {
-            $tag_obj = TagQuery::create()
-                ->findPk($tag);
-        } elseif (is_string($tag)) {
-            $tag_obj = TagQuery::create()
-                ->findOneByCode($tag);
-        } elseif ($tag instanceof Tag) {
-            $tag_obj = $tag;
-        }
-
-        if (!$tag_obj) {
-            return;
-        }
-
-        SignatureTagQuery::create()
-            ->filterBySignature($obj)
-            ->filterByTag($tag_obj)
-            ->delete();
-    }
-
-    public function delete(int $id)
-    {
-        $obj = SignatureQuery::create()
-            ->findPk($id);
-
-        if (!$obj) {
-            return;
-        }
-
-        $obj->delete();
+        $signature->delete();
     }
 }

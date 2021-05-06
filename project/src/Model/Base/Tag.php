@@ -5,6 +5,8 @@ namespace Ncanode\Model\Base;
 use \DateTime;
 use \Exception;
 use \PDO;
+use Ncanode\Model\Signature as ChildSignature;
+use Ncanode\Model\SignatureQuery as ChildSignatureQuery;
 use Ncanode\Model\SignatureTag as ChildSignatureTag;
 use Ncanode\Model\SignatureTagQuery as ChildSignatureTagQuery;
 use Ncanode\Model\Tag as ChildTag;
@@ -101,12 +103,28 @@ abstract class Tag implements ActiveRecordInterface
     protected $collSignatureTagsPartial;
 
     /**
+     * @var        ObjectCollection|ChildSignature[] Cross Collection to store aggregation of ChildSignature objects.
+     */
+    protected $collSignatures;
+
+    /**
+     * @var bool
+     */
+    protected $collSignaturesPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
      * @var boolean
      */
     protected $alreadyInSave = false;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildSignature[]
+     */
+    protected $signaturesScheduledForDeletion = null;
 
     /**
      * An array of objects scheduled for deletion.
@@ -597,6 +615,7 @@ abstract class Tag implements ActiveRecordInterface
 
             $this->collSignatureTags = null;
 
+            $this->collSignatures = null;
         } // if (deep)
     }
 
@@ -723,6 +742,35 @@ abstract class Tag implements ActiveRecordInterface
                 }
                 $this->resetModified();
             }
+
+            if ($this->signaturesScheduledForDeletion !== null) {
+                if (!$this->signaturesScheduledForDeletion->isEmpty()) {
+                    $pks = array();
+                    foreach ($this->signaturesScheduledForDeletion as $entry) {
+                        $entryPk = [];
+
+                        $entryPk[1] = $this->getId();
+                        $entryPk[0] = $entry->getId();
+                        $pks[] = $entryPk;
+                    }
+
+                    \Ncanode\Model\SignatureTagQuery::create()
+                        ->filterByPrimaryKeys($pks)
+                        ->delete($con);
+
+                    $this->signaturesScheduledForDeletion = null;
+                }
+
+            }
+
+            if ($this->collSignatures) {
+                foreach ($this->collSignatures as $signature) {
+                    if (!$signature->isDeleted() && ($signature->isNew() || $signature->isModified())) {
+                        $signature->save($con);
+                    }
+                }
+            }
+
 
             if ($this->signatureTagsScheduledForDeletion !== null) {
                 if (!$this->signatureTagsScheduledForDeletion->isEmpty()) {
@@ -1356,7 +1404,10 @@ abstract class Tag implements ActiveRecordInterface
         $signatureTagsToDelete = $this->getSignatureTags(new Criteria(), $con)->diff($signatureTags);
 
 
-        $this->signatureTagsScheduledForDeletion = $signatureTagsToDelete;
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->signatureTagsScheduledForDeletion = clone $signatureTagsToDelete;
 
         foreach ($signatureTagsToDelete as $signatureTagRemoved) {
             $signatureTagRemoved->setTag(null);
@@ -1487,6 +1538,249 @@ abstract class Tag implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collSignatures collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addSignatures()
+     */
+    public function clearSignatures()
+    {
+        $this->collSignatures = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Initializes the collSignatures crossRef collection.
+     *
+     * By default this just sets the collSignatures collection to an empty collection (like clearSignatures());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @return void
+     */
+    public function initSignatures()
+    {
+        $collectionClassName = SignatureTagTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collSignatures = new $collectionClassName;
+        $this->collSignaturesPartial = true;
+        $this->collSignatures->setModel('\Ncanode\Model\Signature');
+    }
+
+    /**
+     * Checks if the collSignatures collection is loaded.
+     *
+     * @return bool
+     */
+    public function isSignaturesLoaded()
+    {
+        return null !== $this->collSignatures;
+    }
+
+    /**
+     * Gets a collection of ChildSignature objects related by a many-to-many relationship
+     * to the current object by way of the ncanode_signature_tag cross-reference table.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildTag is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria Optional query object to filter the query
+     * @param      ConnectionInterface $con Optional connection object
+     *
+     * @return ObjectCollection|ChildSignature[] List of ChildSignature objects
+     */
+    public function getSignatures(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSignaturesPartial && !$this->isNew();
+        if (null === $this->collSignatures || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collSignatures) {
+                    $this->initSignatures();
+                }
+            } else {
+
+                $query = ChildSignatureQuery::create(null, $criteria)
+                    ->filterByTag($this);
+                $collSignatures = $query->find($con);
+                if (null !== $criteria) {
+                    return $collSignatures;
+                }
+
+                if ($partial && $this->collSignatures) {
+                    //make sure that already added objects gets added to the list of the database.
+                    foreach ($this->collSignatures as $obj) {
+                        if (!$collSignatures->contains($obj)) {
+                            $collSignatures[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collSignatures = $collSignatures;
+                $this->collSignaturesPartial = false;
+            }
+        }
+
+        return $this->collSignatures;
+    }
+
+    /**
+     * Sets a collection of Signature objects related by a many-to-many relationship
+     * to the current object by way of the ncanode_signature_tag cross-reference table.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param  Collection $signatures A Propel collection.
+     * @param  ConnectionInterface $con Optional connection object
+     * @return $this|ChildTag The current object (for fluent API support)
+     */
+    public function setSignatures(Collection $signatures, ConnectionInterface $con = null)
+    {
+        $this->clearSignatures();
+        $currentSignatures = $this->getSignatures();
+
+        $signaturesScheduledForDeletion = $currentSignatures->diff($signatures);
+
+        foreach ($signaturesScheduledForDeletion as $toDelete) {
+            $this->removeSignature($toDelete);
+        }
+
+        foreach ($signatures as $signature) {
+            if (!$currentSignatures->contains($signature)) {
+                $this->doAddSignature($signature);
+            }
+        }
+
+        $this->collSignaturesPartial = false;
+        $this->collSignatures = $signatures;
+
+        return $this;
+    }
+
+    /**
+     * Gets the number of Signature objects related by a many-to-many relationship
+     * to the current object by way of the ncanode_signature_tag cross-reference table.
+     *
+     * @param      Criteria $criteria Optional query object to filter the query
+     * @param      boolean $distinct Set to true to force count distinct
+     * @param      ConnectionInterface $con Optional connection object
+     *
+     * @return int the number of related Signature objects
+     */
+    public function countSignatures(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSignaturesPartial && !$this->isNew();
+        if (null === $this->collSignatures || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collSignatures) {
+                return 0;
+            } else {
+
+                if ($partial && !$criteria) {
+                    return count($this->getSignatures());
+                }
+
+                $query = ChildSignatureQuery::create(null, $criteria);
+                if ($distinct) {
+                    $query->distinct();
+                }
+
+                return $query
+                    ->filterByTag($this)
+                    ->count($con);
+            }
+        } else {
+            return count($this->collSignatures);
+        }
+    }
+
+    /**
+     * Associate a ChildSignature to this object
+     * through the ncanode_signature_tag cross reference table.
+     *
+     * @param ChildSignature $signature
+     * @return ChildTag The current object (for fluent API support)
+     */
+    public function addSignature(ChildSignature $signature)
+    {
+        if ($this->collSignatures === null) {
+            $this->initSignatures();
+        }
+
+        if (!$this->getSignatures()->contains($signature)) {
+            // only add it if the **same** object is not already associated
+            $this->collSignatures->push($signature);
+            $this->doAddSignature($signature);
+        }
+
+        return $this;
+    }
+
+    /**
+     *
+     * @param ChildSignature $signature
+     */
+    protected function doAddSignature(ChildSignature $signature)
+    {
+        $signatureTag = new ChildSignatureTag();
+
+        $signatureTag->setSignature($signature);
+
+        $signatureTag->setTag($this);
+
+        $this->addSignatureTag($signatureTag);
+
+        // set the back reference to this object directly as using provided method either results
+        // in endless loop or in multiple relations
+        if (!$signature->isTagsLoaded()) {
+            $signature->initTags();
+            $signature->getTags()->push($this);
+        } elseif (!$signature->getTags()->contains($this)) {
+            $signature->getTags()->push($this);
+        }
+
+    }
+
+    /**
+     * Remove signature of this object
+     * through the ncanode_signature_tag cross reference table.
+     *
+     * @param ChildSignature $signature
+     * @return ChildTag The current object (for fluent API support)
+     */
+    public function removeSignature(ChildSignature $signature)
+    {
+        if ($this->getSignatures()->contains($signature)) {
+            $signatureTag = new ChildSignatureTag();
+            $signatureTag->setSignature($signature);
+            if ($signature->isTagsLoaded()) {
+                //remove the back reference if available
+                $signature->getTags()->removeObject($this);
+            }
+
+            $signatureTag->setTag($this);
+            $this->removeSignatureTag(clone $signatureTag);
+            $signatureTag->clear();
+
+            $this->collSignatures->remove($this->collSignatures->search($signature));
+
+            if (null === $this->signaturesScheduledForDeletion) {
+                $this->signaturesScheduledForDeletion = clone $this->collSignatures;
+                $this->signaturesScheduledForDeletion->clear();
+            }
+
+            $this->signaturesScheduledForDeletion->push($signature);
+        }
+
+
+        return $this;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
@@ -1520,9 +1814,15 @@ abstract class Tag implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collSignatures) {
+                foreach ($this->collSignatures as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
         $this->collSignatureTags = null;
+        $this->collSignatures = null;
     }
 
     /**

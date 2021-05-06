@@ -485,6 +485,23 @@ abstract class TagQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query by a related Signature object
+     * using the ncanode_signature_tag table as cross reference
+     *
+     * @param Signature $signature the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildTagQuery The current query, for fluid interface
+     */
+    public function filterBySignature($signature, $comparison = Criteria::EQUAL)
+    {
+        return $this
+            ->useSignatureTagQuery()
+            ->filterBySignature($signature, $comparison)
+            ->endUse();
+    }
+
+    /**
      * Exclude object from result
      *
      * @param   ChildTag $tag Object to remove from the list of results

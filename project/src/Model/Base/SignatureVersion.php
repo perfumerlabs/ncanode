@@ -7,11 +7,8 @@ use \Exception;
 use \PDO;
 use Ncanode\Model\Signature as ChildSignature;
 use Ncanode\Model\SignatureQuery as ChildSignatureQuery;
-use Ncanode\Model\SignatureTag as ChildSignatureTag;
-use Ncanode\Model\SignatureTagQuery as ChildSignatureTagQuery;
-use Ncanode\Model\Tag as ChildTag;
-use Ncanode\Model\TagQuery as ChildTagQuery;
-use Ncanode\Model\Map\SignatureTagTableMap;
+use Ncanode\Model\SignatureVersionQuery as ChildSignatureVersionQuery;
+use Ncanode\Model\Map\SignatureVersionTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -26,18 +23,18 @@ use Propel\Runtime\Parser\AbstractParser;
 use Propel\Runtime\Util\PropelDateTime;
 
 /**
- * Base class that represents a row from the 'ncanode_signature_tag' table.
+ * Base class that represents a row from the 'ncanode_signature_version' table.
  *
  *
  *
  * @package    propel.generator..Base
  */
-abstract class SignatureTag implements ActiveRecordInterface
+abstract class SignatureVersion implements ActiveRecordInterface
 {
     /**
      * TableMap class name
      */
-    const TABLE_MAP = '\\Ncanode\\Model\\Map\\SignatureTagTableMap';
+    const TABLE_MAP = '\\Ncanode\\Model\\Map\\SignatureVersionTableMap';
 
 
     /**
@@ -67,18 +64,32 @@ abstract class SignatureTag implements ActiveRecordInterface
     protected $virtualColumns = array();
 
     /**
-     * The value for the signature_id field.
+     * The value for the id field.
      *
      * @var        int
      */
-    protected $signature_id;
+    protected $id;
 
     /**
-     * The value for the tag_id field.
+     * The value for the document field.
      *
-     * @var        int
+     * @var        string
      */
-    protected $tag_id;
+    protected $document;
+
+    /**
+     * The value for the thread field.
+     *
+     * @var        string
+     */
+    protected $thread;
+
+    /**
+     * The value for the cms field.
+     *
+     * @var        string
+     */
+    protected $cms;
 
     /**
      * The value for the created_at field.
@@ -95,14 +106,38 @@ abstract class SignatureTag implements ActiveRecordInterface
     protected $updated_at;
 
     /**
+     * The value for the version field.
+     *
+     * Note: this column has a database default value of: 0
+     * @var        int
+     */
+    protected $version;
+
+    /**
+     * The value for the version_created_at field.
+     *
+     * @var        DateTime|null
+     */
+    protected $version_created_at;
+
+    /**
+     * The value for the version_created_by field.
+     *
+     * @var        string|null
+     */
+    protected $version_created_by;
+
+    /**
+     * The value for the version_comment field.
+     *
+     * @var        string|null
+     */
+    protected $version_comment;
+
+    /**
      * @var        ChildSignature
      */
     protected $aSignature;
-
-    /**
-     * @var        ChildTag
-     */
-    protected $aTag;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -113,10 +148,23 @@ abstract class SignatureTag implements ActiveRecordInterface
     protected $alreadyInSave = false;
 
     /**
-     * Initializes internal state of Ncanode\Model\Base\SignatureTag object.
+     * Applies default values to this object.
+     * This method should be called from the object's constructor (or
+     * equivalent initialization method).
+     * @see __construct()
+     */
+    public function applyDefaultValues()
+    {
+        $this->version = 0;
+    }
+
+    /**
+     * Initializes internal state of Ncanode\Model\Base\SignatureVersion object.
+     * @see applyDefaults()
      */
     public function __construct()
     {
+        $this->applyDefaultValues();
     }
 
     /**
@@ -208,9 +256,9 @@ abstract class SignatureTag implements ActiveRecordInterface
     }
 
     /**
-     * Compares this with another <code>SignatureTag</code> instance.  If
-     * <code>obj</code> is an instance of <code>SignatureTag</code>, delegates to
-     * <code>equals(SignatureTag)</code>.  Otherwise, returns <code>false</code>.
+     * Compares this with another <code>SignatureVersion</code> instance.  If
+     * <code>obj</code> is an instance of <code>SignatureVersion</code>, delegates to
+     * <code>equals(SignatureVersion)</code>.  Otherwise, returns <code>false</code>.
      *
      * @param  mixed   $obj The object to compare to.
      * @return boolean Whether equal to the object specified.
@@ -338,23 +386,43 @@ abstract class SignatureTag implements ActiveRecordInterface
     }
 
     /**
-     * Get the [signature_id] column value.
+     * Get the [id] column value.
      *
      * @return int
      */
-    public function getSignatureId()
+    public function getId()
     {
-        return $this->signature_id;
+        return $this->id;
     }
 
     /**
-     * Get the [tag_id] column value.
+     * Get the [document] column value.
      *
-     * @return int
+     * @return string
      */
-    public function getTagId()
+    public function getDocument()
     {
-        return $this->tag_id;
+        return $this->document;
+    }
+
+    /**
+     * Get the [thread] column value.
+     *
+     * @return string
+     */
+    public function getThread()
+    {
+        return $this->thread;
+    }
+
+    /**
+     * Get the [cms] column value.
+     *
+     * @return string
+     */
+    public function getCms()
+    {
+        return $this->cms;
     }
 
     /**
@@ -398,20 +466,70 @@ abstract class SignatureTag implements ActiveRecordInterface
     }
 
     /**
-     * Set the value of [signature_id] column.
+     * Get the [version] column value.
+     *
+     * @return int
+     */
+    public function getVersion()
+    {
+        return $this->version;
+    }
+
+    /**
+     * Get the [optionally formatted] temporal [version_created_at] column value.
+     *
+     *
+     * @param string|null $format The date/time format string (either date()-style or strftime()-style).
+     *   If format is NULL, then the raw DateTime object will be returned.
+     *
+     * @return string|DateTime|null Formatted date/time value as string or DateTime object (if format is NULL), NULL if column is NULL
+     *
+     * @throws PropelException - if unable to parse/validate the date/time value.
+     */
+    public function getVersionCreatedAt($format = null)
+    {
+        if ($format === null) {
+            return $this->version_created_at;
+        } else {
+            return $this->version_created_at instanceof \DateTimeInterface ? $this->version_created_at->format($format) : null;
+        }
+    }
+
+    /**
+     * Get the [version_created_by] column value.
+     *
+     * @return string|null
+     */
+    public function getVersionCreatedBy()
+    {
+        return $this->version_created_by;
+    }
+
+    /**
+     * Get the [version_comment] column value.
+     *
+     * @return string|null
+     */
+    public function getVersionComment()
+    {
+        return $this->version_comment;
+    }
+
+    /**
+     * Set the value of [id] column.
      *
      * @param int $v New value
-     * @return $this|\Ncanode\Model\SignatureTag The current object (for fluent API support)
+     * @return $this|\Ncanode\Model\SignatureVersion The current object (for fluent API support)
      */
-    public function setSignatureId($v)
+    public function setId($v)
     {
         if ($v !== null) {
             $v = (int) $v;
         }
 
-        if ($this->signature_id !== $v) {
-            $this->signature_id = $v;
-            $this->modifiedColumns[SignatureTagTableMap::COL_SIGNATURE_ID] = true;
+        if ($this->id !== $v) {
+            $this->id = $v;
+            $this->modifiedColumns[SignatureVersionTableMap::COL_ID] = true;
         }
 
         if ($this->aSignature !== null && $this->aSignature->getId() !== $v) {
@@ -419,38 +537,74 @@ abstract class SignatureTag implements ActiveRecordInterface
         }
 
         return $this;
-    } // setSignatureId()
+    } // setId()
 
     /**
-     * Set the value of [tag_id] column.
+     * Set the value of [document] column.
      *
-     * @param int $v New value
-     * @return $this|\Ncanode\Model\SignatureTag The current object (for fluent API support)
+     * @param string $v New value
+     * @return $this|\Ncanode\Model\SignatureVersion The current object (for fluent API support)
      */
-    public function setTagId($v)
+    public function setDocument($v)
     {
         if ($v !== null) {
-            $v = (int) $v;
+            $v = (string) $v;
         }
 
-        if ($this->tag_id !== $v) {
-            $this->tag_id = $v;
-            $this->modifiedColumns[SignatureTagTableMap::COL_TAG_ID] = true;
-        }
-
-        if ($this->aTag !== null && $this->aTag->getId() !== $v) {
-            $this->aTag = null;
+        if ($this->document !== $v) {
+            $this->document = $v;
+            $this->modifiedColumns[SignatureVersionTableMap::COL_DOCUMENT] = true;
         }
 
         return $this;
-    } // setTagId()
+    } // setDocument()
+
+    /**
+     * Set the value of [thread] column.
+     *
+     * @param string $v New value
+     * @return $this|\Ncanode\Model\SignatureVersion The current object (for fluent API support)
+     */
+    public function setThread($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->thread !== $v) {
+            $this->thread = $v;
+            $this->modifiedColumns[SignatureVersionTableMap::COL_THREAD] = true;
+        }
+
+        return $this;
+    } // setThread()
+
+    /**
+     * Set the value of [cms] column.
+     *
+     * @param string $v New value
+     * @return $this|\Ncanode\Model\SignatureVersion The current object (for fluent API support)
+     */
+    public function setCms($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->cms !== $v) {
+            $this->cms = $v;
+            $this->modifiedColumns[SignatureVersionTableMap::COL_CMS] = true;
+        }
+
+        return $this;
+    } // setCms()
 
     /**
      * Sets the value of [created_at] column to a normalized version of the date/time value specified.
      *
      * @param  string|integer|\DateTimeInterface|null $v string, integer (timestamp), or \DateTimeInterface value.
      *               Empty strings are treated as NULL.
-     * @return $this|\Ncanode\Model\SignatureTag The current object (for fluent API support)
+     * @return $this|\Ncanode\Model\SignatureVersion The current object (for fluent API support)
      */
     public function setCreatedAt($v)
     {
@@ -458,7 +612,7 @@ abstract class SignatureTag implements ActiveRecordInterface
         if ($this->created_at !== null || $dt !== null) {
             if ($this->created_at === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->created_at->format("Y-m-d H:i:s.u")) {
                 $this->created_at = $dt === null ? null : clone $dt;
-                $this->modifiedColumns[SignatureTagTableMap::COL_CREATED_AT] = true;
+                $this->modifiedColumns[SignatureVersionTableMap::COL_CREATED_AT] = true;
             }
         } // if either are not null
 
@@ -470,7 +624,7 @@ abstract class SignatureTag implements ActiveRecordInterface
      *
      * @param  string|integer|\DateTimeInterface|null $v string, integer (timestamp), or \DateTimeInterface value.
      *               Empty strings are treated as NULL.
-     * @return $this|\Ncanode\Model\SignatureTag The current object (for fluent API support)
+     * @return $this|\Ncanode\Model\SignatureVersion The current object (for fluent API support)
      */
     public function setUpdatedAt($v)
     {
@@ -478,12 +632,92 @@ abstract class SignatureTag implements ActiveRecordInterface
         if ($this->updated_at !== null || $dt !== null) {
             if ($this->updated_at === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->updated_at->format("Y-m-d H:i:s.u")) {
                 $this->updated_at = $dt === null ? null : clone $dt;
-                $this->modifiedColumns[SignatureTagTableMap::COL_UPDATED_AT] = true;
+                $this->modifiedColumns[SignatureVersionTableMap::COL_UPDATED_AT] = true;
             }
         } // if either are not null
 
         return $this;
     } // setUpdatedAt()
+
+    /**
+     * Set the value of [version] column.
+     *
+     * @param int $v New value
+     * @return $this|\Ncanode\Model\SignatureVersion The current object (for fluent API support)
+     */
+    public function setVersion($v)
+    {
+        if ($v !== null) {
+            $v = (int) $v;
+        }
+
+        if ($this->version !== $v) {
+            $this->version = $v;
+            $this->modifiedColumns[SignatureVersionTableMap::COL_VERSION] = true;
+        }
+
+        return $this;
+    } // setVersion()
+
+    /**
+     * Sets the value of [version_created_at] column to a normalized version of the date/time value specified.
+     *
+     * @param  string|integer|\DateTimeInterface|null $v string, integer (timestamp), or \DateTimeInterface value.
+     *               Empty strings are treated as NULL.
+     * @return $this|\Ncanode\Model\SignatureVersion The current object (for fluent API support)
+     */
+    public function setVersionCreatedAt($v)
+    {
+        $dt = PropelDateTime::newInstance($v, null, 'DateTime');
+        if ($this->version_created_at !== null || $dt !== null) {
+            if ($this->version_created_at === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->version_created_at->format("Y-m-d H:i:s.u")) {
+                $this->version_created_at = $dt === null ? null : clone $dt;
+                $this->modifiedColumns[SignatureVersionTableMap::COL_VERSION_CREATED_AT] = true;
+            }
+        } // if either are not null
+
+        return $this;
+    } // setVersionCreatedAt()
+
+    /**
+     * Set the value of [version_created_by] column.
+     *
+     * @param string|null $v New value
+     * @return $this|\Ncanode\Model\SignatureVersion The current object (for fluent API support)
+     */
+    public function setVersionCreatedBy($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->version_created_by !== $v) {
+            $this->version_created_by = $v;
+            $this->modifiedColumns[SignatureVersionTableMap::COL_VERSION_CREATED_BY] = true;
+        }
+
+        return $this;
+    } // setVersionCreatedBy()
+
+    /**
+     * Set the value of [version_comment] column.
+     *
+     * @param string|null $v New value
+     * @return $this|\Ncanode\Model\SignatureVersion The current object (for fluent API support)
+     */
+    public function setVersionComment($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->version_comment !== $v) {
+            $this->version_comment = $v;
+            $this->modifiedColumns[SignatureVersionTableMap::COL_VERSION_COMMENT] = true;
+        }
+
+        return $this;
+    } // setVersionComment()
 
     /**
      * Indicates whether the columns in this object are only set to default values.
@@ -495,6 +729,10 @@ abstract class SignatureTag implements ActiveRecordInterface
      */
     public function hasOnlyDefaultValues()
     {
+            if ($this->version !== 0) {
+                return false;
+            }
+
         // otherwise, everything was equal, so return TRUE
         return true;
     } // hasOnlyDefaultValues()
@@ -521,17 +759,35 @@ abstract class SignatureTag implements ActiveRecordInterface
     {
         try {
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : SignatureTagTableMap::translateFieldName('SignatureId', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->signature_id = (null !== $col) ? (int) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : SignatureVersionTableMap::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : SignatureTagTableMap::translateFieldName('TagId', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->tag_id = (null !== $col) ? (int) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : SignatureVersionTableMap::translateFieldName('Document', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->document = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : SignatureTagTableMap::translateFieldName('CreatedAt', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : SignatureVersionTableMap::translateFieldName('Thread', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->thread = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : SignatureVersionTableMap::translateFieldName('Cms', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->cms = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : SignatureVersionTableMap::translateFieldName('CreatedAt', TableMap::TYPE_PHPNAME, $indexType)];
             $this->created_at = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : SignatureTagTableMap::translateFieldName('UpdatedAt', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : SignatureVersionTableMap::translateFieldName('UpdatedAt', TableMap::TYPE_PHPNAME, $indexType)];
             $this->updated_at = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : SignatureVersionTableMap::translateFieldName('Version', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->version = (null !== $col) ? (int) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : SignatureVersionTableMap::translateFieldName('VersionCreatedAt', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->version_created_at = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : SignatureVersionTableMap::translateFieldName('VersionCreatedBy', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->version_created_by = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : SignatureVersionTableMap::translateFieldName('VersionComment', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->version_comment = (null !== $col) ? (string) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -540,10 +796,10 @@ abstract class SignatureTag implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 4; // 4 = SignatureTagTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 10; // 10 = SignatureVersionTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
-            throw new PropelException(sprintf('Error populating %s object', '\\Ncanode\\Model\\SignatureTag'), 0, $e);
+            throw new PropelException(sprintf('Error populating %s object', '\\Ncanode\\Model\\SignatureVersion'), 0, $e);
         }
     }
 
@@ -562,11 +818,8 @@ abstract class SignatureTag implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
-        if ($this->aSignature !== null && $this->signature_id !== $this->aSignature->getId()) {
+        if ($this->aSignature !== null && $this->id !== $this->aSignature->getId()) {
             $this->aSignature = null;
-        }
-        if ($this->aTag !== null && $this->tag_id !== $this->aTag->getId()) {
-            $this->aTag = null;
         }
     } // ensureConsistency
 
@@ -591,13 +844,13 @@ abstract class SignatureTag implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getReadConnection(SignatureTagTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getReadConnection(SignatureVersionTableMap::DATABASE_NAME);
         }
 
         // We don't need to alter the object instance pool; we're just modifying this instance
         // already in the pool.
 
-        $dataFetcher = ChildSignatureTagQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
+        $dataFetcher = ChildSignatureVersionQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
         $row = $dataFetcher->fetch();
         $dataFetcher->close();
         if (!$row) {
@@ -608,7 +861,6 @@ abstract class SignatureTag implements ActiveRecordInterface
         if ($deep) {  // also de-associate any related objects?
 
             $this->aSignature = null;
-            $this->aTag = null;
         } // if (deep)
     }
 
@@ -618,8 +870,8 @@ abstract class SignatureTag implements ActiveRecordInterface
      * @param      ConnectionInterface $con
      * @return void
      * @throws PropelException
-     * @see SignatureTag::setDeleted()
-     * @see SignatureTag::isDeleted()
+     * @see SignatureVersion::setDeleted()
+     * @see SignatureVersion::isDeleted()
      */
     public function delete(ConnectionInterface $con = null)
     {
@@ -628,11 +880,11 @@ abstract class SignatureTag implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(SignatureTagTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(SignatureVersionTableMap::DATABASE_NAME);
         }
 
         $con->transaction(function () use ($con) {
-            $deleteQuery = ChildSignatureTagQuery::create()
+            $deleteQuery = ChildSignatureVersionQuery::create()
                 ->filterByPrimaryKey($this->getPrimaryKey());
             $ret = $this->preDelete($con);
             if ($ret) {
@@ -667,7 +919,7 @@ abstract class SignatureTag implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(SignatureTagTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(SignatureVersionTableMap::DATABASE_NAME);
         }
 
         return $con->transaction(function () use ($con) {
@@ -675,21 +927,8 @@ abstract class SignatureTag implements ActiveRecordInterface
             $isInsert = $this->isNew();
             if ($isInsert) {
                 $ret = $ret && $this->preInsert($con);
-                // timestampable behavior
-                $time = time();
-                $highPrecision = \Propel\Runtime\Util\PropelDateTime::createHighPrecision();
-                if (!$this->isColumnModified(SignatureTagTableMap::COL_CREATED_AT)) {
-                    $this->setCreatedAt($highPrecision);
-                }
-                if (!$this->isColumnModified(SignatureTagTableMap::COL_UPDATED_AT)) {
-                    $this->setUpdatedAt($highPrecision);
-                }
             } else {
                 $ret = $ret && $this->preUpdate($con);
-                // timestampable behavior
-                if ($this->isModified() && !$this->isColumnModified(SignatureTagTableMap::COL_UPDATED_AT)) {
-                    $this->setUpdatedAt(\Propel\Runtime\Util\PropelDateTime::createHighPrecision());
-                }
             }
             if ($ret) {
                 $affectedRows = $this->doSave($con);
@@ -699,7 +938,7 @@ abstract class SignatureTag implements ActiveRecordInterface
                     $this->postUpdate($con);
                 }
                 $this->postSave($con);
-                SignatureTagTableMap::addInstanceToPool($this);
+                SignatureVersionTableMap::addInstanceToPool($this);
             } else {
                 $affectedRows = 0;
             }
@@ -737,13 +976,6 @@ abstract class SignatureTag implements ActiveRecordInterface
                 $this->setSignature($this->aSignature);
             }
 
-            if ($this->aTag !== null) {
-                if ($this->aTag->isModified() || $this->aTag->isNew()) {
-                    $affectedRows += $this->aTag->save($con);
-                }
-                $this->setTag($this->aTag);
-            }
-
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
                 if ($this->isNew()) {
@@ -777,21 +1009,39 @@ abstract class SignatureTag implements ActiveRecordInterface
 
 
          // check the columns in natural order for more readable SQL queries
-        if ($this->isColumnModified(SignatureTagTableMap::COL_SIGNATURE_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'signature_id';
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'id';
         }
-        if ($this->isColumnModified(SignatureTagTableMap::COL_TAG_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'tag_id';
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_DOCUMENT)) {
+            $modifiedColumns[':p' . $index++]  = 'document';
         }
-        if ($this->isColumnModified(SignatureTagTableMap::COL_CREATED_AT)) {
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_THREAD)) {
+            $modifiedColumns[':p' . $index++]  = 'thread';
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_CMS)) {
+            $modifiedColumns[':p' . $index++]  = 'cms';
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_CREATED_AT)) {
             $modifiedColumns[':p' . $index++]  = 'created_at';
         }
-        if ($this->isColumnModified(SignatureTagTableMap::COL_UPDATED_AT)) {
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_UPDATED_AT)) {
             $modifiedColumns[':p' . $index++]  = 'updated_at';
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_VERSION)) {
+            $modifiedColumns[':p' . $index++]  = 'version';
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_VERSION_CREATED_AT)) {
+            $modifiedColumns[':p' . $index++]  = 'version_created_at';
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_VERSION_CREATED_BY)) {
+            $modifiedColumns[':p' . $index++]  = 'version_created_by';
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_VERSION_COMMENT)) {
+            $modifiedColumns[':p' . $index++]  = 'version_comment';
         }
 
         $sql = sprintf(
-            'INSERT INTO ncanode_signature_tag (%s) VALUES (%s)',
+            'INSERT INTO ncanode_signature_version (%s) VALUES (%s)',
             implode(', ', $modifiedColumns),
             implode(', ', array_keys($modifiedColumns))
         );
@@ -800,17 +1050,35 @@ abstract class SignatureTag implements ActiveRecordInterface
             $stmt = $con->prepare($sql);
             foreach ($modifiedColumns as $identifier => $columnName) {
                 switch ($columnName) {
-                    case 'signature_id':
-                        $stmt->bindValue($identifier, $this->signature_id, PDO::PARAM_INT);
+                    case 'id':
+                        $stmt->bindValue($identifier, $this->id, PDO::PARAM_INT);
                         break;
-                    case 'tag_id':
-                        $stmt->bindValue($identifier, $this->tag_id, PDO::PARAM_INT);
+                    case 'document':
+                        $stmt->bindValue($identifier, $this->document, PDO::PARAM_STR);
+                        break;
+                    case 'thread':
+                        $stmt->bindValue($identifier, $this->thread, PDO::PARAM_STR);
+                        break;
+                    case 'cms':
+                        $stmt->bindValue($identifier, $this->cms, PDO::PARAM_STR);
                         break;
                     case 'created_at':
                         $stmt->bindValue($identifier, $this->created_at ? $this->created_at->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
                         break;
                     case 'updated_at':
                         $stmt->bindValue($identifier, $this->updated_at ? $this->updated_at->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
+                        break;
+                    case 'version':
+                        $stmt->bindValue($identifier, $this->version, PDO::PARAM_INT);
+                        break;
+                    case 'version_created_at':
+                        $stmt->bindValue($identifier, $this->version_created_at ? $this->version_created_at->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
+                        break;
+                    case 'version_created_by':
+                        $stmt->bindValue($identifier, $this->version_created_by, PDO::PARAM_STR);
+                        break;
+                    case 'version_comment':
+                        $stmt->bindValue($identifier, $this->version_comment, PDO::PARAM_STR);
                         break;
                 }
             }
@@ -851,7 +1119,7 @@ abstract class SignatureTag implements ActiveRecordInterface
      */
     public function getByName($name, $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = SignatureTagTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = SignatureVersionTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
         $field = $this->getByPosition($pos);
 
         return $field;
@@ -868,16 +1136,34 @@ abstract class SignatureTag implements ActiveRecordInterface
     {
         switch ($pos) {
             case 0:
-                return $this->getSignatureId();
+                return $this->getId();
                 break;
             case 1:
-                return $this->getTagId();
+                return $this->getDocument();
                 break;
             case 2:
-                return $this->getCreatedAt();
+                return $this->getThread();
                 break;
             case 3:
+                return $this->getCms();
+                break;
+            case 4:
+                return $this->getCreatedAt();
+                break;
+            case 5:
                 return $this->getUpdatedAt();
+                break;
+            case 6:
+                return $this->getVersion();
+                break;
+            case 7:
+                return $this->getVersionCreatedAt();
+                break;
+            case 8:
+                return $this->getVersionCreatedBy();
+                break;
+            case 9:
+                return $this->getVersionComment();
                 break;
             default:
                 return null;
@@ -903,23 +1189,33 @@ abstract class SignatureTag implements ActiveRecordInterface
     public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
-        if (isset($alreadyDumpedObjects['SignatureTag'][$this->hashCode()])) {
+        if (isset($alreadyDumpedObjects['SignatureVersion'][$this->hashCode()])) {
             return '*RECURSION*';
         }
-        $alreadyDumpedObjects['SignatureTag'][$this->hashCode()] = true;
-        $keys = SignatureTagTableMap::getFieldNames($keyType);
+        $alreadyDumpedObjects['SignatureVersion'][$this->hashCode()] = true;
+        $keys = SignatureVersionTableMap::getFieldNames($keyType);
         $result = array(
-            $keys[0] => $this->getSignatureId(),
-            $keys[1] => $this->getTagId(),
-            $keys[2] => $this->getCreatedAt(),
-            $keys[3] => $this->getUpdatedAt(),
+            $keys[0] => $this->getId(),
+            $keys[1] => $this->getDocument(),
+            $keys[2] => $this->getThread(),
+            $keys[3] => $this->getCms(),
+            $keys[4] => $this->getCreatedAt(),
+            $keys[5] => $this->getUpdatedAt(),
+            $keys[6] => $this->getVersion(),
+            $keys[7] => $this->getVersionCreatedAt(),
+            $keys[8] => $this->getVersionCreatedBy(),
+            $keys[9] => $this->getVersionComment(),
         );
-        if ($result[$keys[2]] instanceof \DateTimeInterface) {
-            $result[$keys[2]] = $result[$keys[2]]->format('Y-m-d H:i:s.u');
+        if ($result[$keys[4]] instanceof \DateTimeInterface) {
+            $result[$keys[4]] = $result[$keys[4]]->format('Y-m-d H:i:s.u');
         }
 
-        if ($result[$keys[3]] instanceof \DateTimeInterface) {
-            $result[$keys[3]] = $result[$keys[3]]->format('Y-m-d H:i:s.u');
+        if ($result[$keys[5]] instanceof \DateTimeInterface) {
+            $result[$keys[5]] = $result[$keys[5]]->format('Y-m-d H:i:s.u');
+        }
+
+        if ($result[$keys[7]] instanceof \DateTimeInterface) {
+            $result[$keys[7]] = $result[$keys[7]]->format('Y-m-d H:i:s.u');
         }
 
         $virtualColumns = $this->virtualColumns;
@@ -943,21 +1239,6 @@ abstract class SignatureTag implements ActiveRecordInterface
 
                 $result[$key] = $this->aSignature->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
             }
-            if (null !== $this->aTag) {
-
-                switch ($keyType) {
-                    case TableMap::TYPE_CAMELNAME:
-                        $key = 'tag';
-                        break;
-                    case TableMap::TYPE_FIELDNAME:
-                        $key = 'ncanode_tag';
-                        break;
-                    default:
-                        $key = 'Tag';
-                }
-
-                $result[$key] = $this->aTag->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
-            }
         }
 
         return $result;
@@ -972,11 +1253,11 @@ abstract class SignatureTag implements ActiveRecordInterface
      *                one of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *                Defaults to TableMap::TYPE_PHPNAME.
-     * @return $this|\Ncanode\Model\SignatureTag
+     * @return $this|\Ncanode\Model\SignatureVersion
      */
     public function setByName($name, $value, $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = SignatureTagTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = SignatureVersionTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
 
         return $this->setByPosition($pos, $value);
     }
@@ -987,22 +1268,40 @@ abstract class SignatureTag implements ActiveRecordInterface
      *
      * @param  int $pos position in xml schema
      * @param  mixed $value field value
-     * @return $this|\Ncanode\Model\SignatureTag
+     * @return $this|\Ncanode\Model\SignatureVersion
      */
     public function setByPosition($pos, $value)
     {
         switch ($pos) {
             case 0:
-                $this->setSignatureId($value);
+                $this->setId($value);
                 break;
             case 1:
-                $this->setTagId($value);
+                $this->setDocument($value);
                 break;
             case 2:
-                $this->setCreatedAt($value);
+                $this->setThread($value);
                 break;
             case 3:
+                $this->setCms($value);
+                break;
+            case 4:
+                $this->setCreatedAt($value);
+                break;
+            case 5:
                 $this->setUpdatedAt($value);
+                break;
+            case 6:
+                $this->setVersion($value);
+                break;
+            case 7:
+                $this->setVersionCreatedAt($value);
+                break;
+            case 8:
+                $this->setVersionCreatedBy($value);
+                break;
+            case 9:
+                $this->setVersionComment($value);
                 break;
         } // switch()
 
@@ -1028,19 +1327,37 @@ abstract class SignatureTag implements ActiveRecordInterface
      */
     public function fromArray($arr, $keyType = TableMap::TYPE_PHPNAME)
     {
-        $keys = SignatureTagTableMap::getFieldNames($keyType);
+        $keys = SignatureVersionTableMap::getFieldNames($keyType);
 
         if (array_key_exists($keys[0], $arr)) {
-            $this->setSignatureId($arr[$keys[0]]);
+            $this->setId($arr[$keys[0]]);
         }
         if (array_key_exists($keys[1], $arr)) {
-            $this->setTagId($arr[$keys[1]]);
+            $this->setDocument($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setCreatedAt($arr[$keys[2]]);
+            $this->setThread($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
-            $this->setUpdatedAt($arr[$keys[3]]);
+            $this->setCms($arr[$keys[3]]);
+        }
+        if (array_key_exists($keys[4], $arr)) {
+            $this->setCreatedAt($arr[$keys[4]]);
+        }
+        if (array_key_exists($keys[5], $arr)) {
+            $this->setUpdatedAt($arr[$keys[5]]);
+        }
+        if (array_key_exists($keys[6], $arr)) {
+            $this->setVersion($arr[$keys[6]]);
+        }
+        if (array_key_exists($keys[7], $arr)) {
+            $this->setVersionCreatedAt($arr[$keys[7]]);
+        }
+        if (array_key_exists($keys[8], $arr)) {
+            $this->setVersionCreatedBy($arr[$keys[8]]);
+        }
+        if (array_key_exists($keys[9], $arr)) {
+            $this->setVersionComment($arr[$keys[9]]);
         }
     }
 
@@ -1061,7 +1378,7 @@ abstract class SignatureTag implements ActiveRecordInterface
      * @param string $data The source data to import from
      * @param string $keyType The type of keys the array uses.
      *
-     * @return $this|\Ncanode\Model\SignatureTag The current object, for fluid interface
+     * @return $this|\Ncanode\Model\SignatureVersion The current object, for fluid interface
      */
     public function importFrom($parser, $data, $keyType = TableMap::TYPE_PHPNAME)
     {
@@ -1081,19 +1398,37 @@ abstract class SignatureTag implements ActiveRecordInterface
      */
     public function buildCriteria()
     {
-        $criteria = new Criteria(SignatureTagTableMap::DATABASE_NAME);
+        $criteria = new Criteria(SignatureVersionTableMap::DATABASE_NAME);
 
-        if ($this->isColumnModified(SignatureTagTableMap::COL_SIGNATURE_ID)) {
-            $criteria->add(SignatureTagTableMap::COL_SIGNATURE_ID, $this->signature_id);
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_ID)) {
+            $criteria->add(SignatureVersionTableMap::COL_ID, $this->id);
         }
-        if ($this->isColumnModified(SignatureTagTableMap::COL_TAG_ID)) {
-            $criteria->add(SignatureTagTableMap::COL_TAG_ID, $this->tag_id);
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_DOCUMENT)) {
+            $criteria->add(SignatureVersionTableMap::COL_DOCUMENT, $this->document);
         }
-        if ($this->isColumnModified(SignatureTagTableMap::COL_CREATED_AT)) {
-            $criteria->add(SignatureTagTableMap::COL_CREATED_AT, $this->created_at);
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_THREAD)) {
+            $criteria->add(SignatureVersionTableMap::COL_THREAD, $this->thread);
         }
-        if ($this->isColumnModified(SignatureTagTableMap::COL_UPDATED_AT)) {
-            $criteria->add(SignatureTagTableMap::COL_UPDATED_AT, $this->updated_at);
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_CMS)) {
+            $criteria->add(SignatureVersionTableMap::COL_CMS, $this->cms);
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_CREATED_AT)) {
+            $criteria->add(SignatureVersionTableMap::COL_CREATED_AT, $this->created_at);
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_UPDATED_AT)) {
+            $criteria->add(SignatureVersionTableMap::COL_UPDATED_AT, $this->updated_at);
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_VERSION)) {
+            $criteria->add(SignatureVersionTableMap::COL_VERSION, $this->version);
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_VERSION_CREATED_AT)) {
+            $criteria->add(SignatureVersionTableMap::COL_VERSION_CREATED_AT, $this->version_created_at);
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_VERSION_CREATED_BY)) {
+            $criteria->add(SignatureVersionTableMap::COL_VERSION_CREATED_BY, $this->version_created_by);
+        }
+        if ($this->isColumnModified(SignatureVersionTableMap::COL_VERSION_COMMENT)) {
+            $criteria->add(SignatureVersionTableMap::COL_VERSION_COMMENT, $this->version_comment);
         }
 
         return $criteria;
@@ -1111,9 +1446,9 @@ abstract class SignatureTag implements ActiveRecordInterface
      */
     public function buildPkeyCriteria()
     {
-        $criteria = ChildSignatureTagQuery::create();
-        $criteria->add(SignatureTagTableMap::COL_SIGNATURE_ID, $this->signature_id);
-        $criteria->add(SignatureTagTableMap::COL_TAG_ID, $this->tag_id);
+        $criteria = ChildSignatureVersionQuery::create();
+        $criteria->add(SignatureVersionTableMap::COL_ID, $this->id);
+        $criteria->add(SignatureVersionTableMap::COL_VERSION, $this->version);
 
         return $criteria;
     }
@@ -1126,21 +1461,14 @@ abstract class SignatureTag implements ActiveRecordInterface
      */
     public function hashCode()
     {
-        $validPk = null !== $this->getSignatureId() &&
-            null !== $this->getTagId();
+        $validPk = null !== $this->getId() &&
+            null !== $this->getVersion();
 
-        $validPrimaryKeyFKs = 2;
+        $validPrimaryKeyFKs = 1;
         $primaryKeyFKs = [];
 
-        //relation ncanode_signature_tag_fk_51f38c to table ncanode_signature
+        //relation ncanode_signature_version_fk_e24b62 to table ncanode_signature
         if ($this->aSignature && $hash = spl_object_hash($this->aSignature)) {
-            $primaryKeyFKs[] = $hash;
-        } else {
-            $validPrimaryKeyFKs = false;
-        }
-
-        //relation ncanode_signature_tag_fk_afad90 to table ncanode_tag
-        if ($this->aTag && $hash = spl_object_hash($this->aTag)) {
             $primaryKeyFKs[] = $hash;
         } else {
             $validPrimaryKeyFKs = false;
@@ -1163,8 +1491,8 @@ abstract class SignatureTag implements ActiveRecordInterface
     public function getPrimaryKey()
     {
         $pks = array();
-        $pks[0] = $this->getSignatureId();
-        $pks[1] = $this->getTagId();
+        $pks[0] = $this->getId();
+        $pks[1] = $this->getVersion();
 
         return $pks;
     }
@@ -1177,8 +1505,8 @@ abstract class SignatureTag implements ActiveRecordInterface
      */
     public function setPrimaryKey($keys)
     {
-        $this->setSignatureId($keys[0]);
-        $this->setTagId($keys[1]);
+        $this->setId($keys[0]);
+        $this->setVersion($keys[1]);
     }
 
     /**
@@ -1187,7 +1515,7 @@ abstract class SignatureTag implements ActiveRecordInterface
      */
     public function isPrimaryKeyNull()
     {
-        return (null === $this->getSignatureId()) && (null === $this->getTagId());
+        return (null === $this->getId()) && (null === $this->getVersion());
     }
 
     /**
@@ -1196,17 +1524,23 @@ abstract class SignatureTag implements ActiveRecordInterface
      * If desired, this method can also make copies of all associated (fkey referrers)
      * objects.
      *
-     * @param      object $copyObj An object of \Ncanode\Model\SignatureTag (or compatible) type.
+     * @param      object $copyObj An object of \Ncanode\Model\SignatureVersion (or compatible) type.
      * @param      boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
      * @param      boolean $makeNew Whether to reset autoincrement PKs and make the object new.
      * @throws PropelException
      */
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
-        $copyObj->setSignatureId($this->getSignatureId());
-        $copyObj->setTagId($this->getTagId());
+        $copyObj->setId($this->getId());
+        $copyObj->setDocument($this->getDocument());
+        $copyObj->setThread($this->getThread());
+        $copyObj->setCms($this->getCms());
         $copyObj->setCreatedAt($this->getCreatedAt());
         $copyObj->setUpdatedAt($this->getUpdatedAt());
+        $copyObj->setVersion($this->getVersion());
+        $copyObj->setVersionCreatedAt($this->getVersionCreatedAt());
+        $copyObj->setVersionCreatedBy($this->getVersionCreatedBy());
+        $copyObj->setVersionComment($this->getVersionComment());
         if ($makeNew) {
             $copyObj->setNew(true);
         }
@@ -1221,7 +1555,7 @@ abstract class SignatureTag implements ActiveRecordInterface
      * objects.
      *
      * @param  boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
-     * @return \Ncanode\Model\SignatureTag Clone of current object.
+     * @return \Ncanode\Model\SignatureVersion Clone of current object.
      * @throws PropelException
      */
     public function copy($deepCopy = false)
@@ -1238,15 +1572,15 @@ abstract class SignatureTag implements ActiveRecordInterface
      * Declares an association between this object and a ChildSignature object.
      *
      * @param  ChildSignature $v
-     * @return $this|\Ncanode\Model\SignatureTag The current object (for fluent API support)
+     * @return $this|\Ncanode\Model\SignatureVersion The current object (for fluent API support)
      * @throws PropelException
      */
     public function setSignature(ChildSignature $v = null)
     {
         if ($v === null) {
-            $this->setSignatureId(NULL);
+            $this->setId(NULL);
         } else {
-            $this->setSignatureId($v->getId());
+            $this->setId($v->getId());
         }
 
         $this->aSignature = $v;
@@ -1254,7 +1588,7 @@ abstract class SignatureTag implements ActiveRecordInterface
         // Add binding for other direction of this n:n relationship.
         // If this object has already been added to the ChildSignature object, it will not be re-added.
         if ($v !== null) {
-            $v->addSignatureTag($this);
+            $v->addSignatureVersion($this);
         }
 
 
@@ -1271,69 +1605,18 @@ abstract class SignatureTag implements ActiveRecordInterface
      */
     public function getSignature(ConnectionInterface $con = null)
     {
-        if ($this->aSignature === null && ($this->signature_id != 0)) {
-            $this->aSignature = ChildSignatureQuery::create()->findPk($this->signature_id, $con);
+        if ($this->aSignature === null && ($this->id != 0)) {
+            $this->aSignature = ChildSignatureQuery::create()->findPk($this->id, $con);
             /* The following can be used additionally to
                 guarantee the related object contains a reference
                 to this object.  This level of coupling may, however, be
                 undesirable since it could result in an only partially populated collection
                 in the referenced object.
-                $this->aSignature->addSignatureTags($this);
+                $this->aSignature->addSignatureVersions($this);
              */
         }
 
         return $this->aSignature;
-    }
-
-    /**
-     * Declares an association between this object and a ChildTag object.
-     *
-     * @param  ChildTag $v
-     * @return $this|\Ncanode\Model\SignatureTag The current object (for fluent API support)
-     * @throws PropelException
-     */
-    public function setTag(ChildTag $v = null)
-    {
-        if ($v === null) {
-            $this->setTagId(NULL);
-        } else {
-            $this->setTagId($v->getId());
-        }
-
-        $this->aTag = $v;
-
-        // Add binding for other direction of this n:n relationship.
-        // If this object has already been added to the ChildTag object, it will not be re-added.
-        if ($v !== null) {
-            $v->addSignatureTag($this);
-        }
-
-
-        return $this;
-    }
-
-
-    /**
-     * Get the associated ChildTag object
-     *
-     * @param  ConnectionInterface $con Optional Connection object.
-     * @return ChildTag The associated ChildTag object.
-     * @throws PropelException
-     */
-    public function getTag(ConnectionInterface $con = null)
-    {
-        if ($this->aTag === null && ($this->tag_id != 0)) {
-            $this->aTag = ChildTagQuery::create()->findPk($this->tag_id, $con);
-            /* The following can be used additionally to
-                guarantee the related object contains a reference
-                to this object.  This level of coupling may, however, be
-                undesirable since it could result in an only partially populated collection
-                in the referenced object.
-                $this->aTag->addSignatureTags($this);
-             */
-        }
-
-        return $this->aTag;
     }
 
     /**
@@ -1344,17 +1627,21 @@ abstract class SignatureTag implements ActiveRecordInterface
     public function clear()
     {
         if (null !== $this->aSignature) {
-            $this->aSignature->removeSignatureTag($this);
+            $this->aSignature->removeSignatureVersion($this);
         }
-        if (null !== $this->aTag) {
-            $this->aTag->removeSignatureTag($this);
-        }
-        $this->signature_id = null;
-        $this->tag_id = null;
+        $this->id = null;
+        $this->document = null;
+        $this->thread = null;
+        $this->cms = null;
         $this->created_at = null;
         $this->updated_at = null;
+        $this->version = null;
+        $this->version_created_at = null;
+        $this->version_created_by = null;
+        $this->version_comment = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
+        $this->applyDefaultValues();
         $this->resetModified();
         $this->setNew(true);
         $this->setDeleted(false);
@@ -1374,7 +1661,6 @@ abstract class SignatureTag implements ActiveRecordInterface
         } // if ($deep)
 
         $this->aSignature = null;
-        $this->aTag = null;
     }
 
     /**
@@ -1384,21 +1670,7 @@ abstract class SignatureTag implements ActiveRecordInterface
      */
     public function __toString()
     {
-        return (string) $this->exportTo(SignatureTagTableMap::DEFAULT_STRING_FORMAT);
-    }
-
-    // timestampable behavior
-
-    /**
-     * Mark the current object so that the update date doesn't get updated during next save
-     *
-     * @return     $this|ChildSignatureTag The current object (for fluent API support)
-     */
-    public function keepUpdateDateUnchanged()
-    {
-        $this->modifiedColumns[SignatureTagTableMap::COL_UPDATED_AT] = true;
-
-        return $this;
+        return (string) $this->exportTo(SignatureVersionTableMap::DEFAULT_STRING_FORMAT);
     }
 
     /**

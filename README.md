@@ -23,8 +23,17 @@ Environment variables
 =====================
 
 - NCANODE_REMOTE_URL - full url to original ncanode server. Required.
-- NCANODE_KEY - path to private key on the container. Required.
-- NCANODE_PWD - password of the private key. Required.
+- NCANODE_KEY - path to private key on the container. Required, if [Ncanode](https://ncanode.kz/) API is planned to be used.
+- NCANODE_PWD - password of the private key. Required, if [Ncanode](https://ncanode.kz/) API is planned to be used.
+- PHP_PM_MAX_CHILDREN - number of FPM workers. Default value is 10.
+- PHP_PM_MAX_REQUESTS - number of FPM max requests. Default value is 500.
+- PG_HOST - PostgreSQL connection host. Required.
+- PG_REAL_HOST - PostgreSQL database instance host (not PgBouncer). Required.
+- PG_PORT - PostgreSQL port. Default value is 5432.
+- PG_DATABASE - PostgreSQL database name. Required.
+- PG_SCHEMA - PostgreSQL database schema. Default is "public".
+- PG_USER - PostgreSQL user name. Required.
+- PG_PASSWORD - PostgreSQL user password. Required.
 
 Volumes
 =======
@@ -32,13 +41,6 @@ Volumes
 This image has no volumes.
 
 If you want to make any additional configuration of container, mount your bash script to /opt/setup.sh. This script will be executed on container setup.
-
-Software
-========
-
-1. Ubuntu 16.04 Xenial
-1. Nginx 1.16
-1. PHP 7.4
 
 API REFERENCE
 =============
@@ -99,12 +101,9 @@ Success response:
 <summary><code>GET /signature</code> - get signature</summary>
 <p>
 
-Parameters (json). Provide id, parent or (document, chain, stage):
-- id [integer,optional] - ID of signature
-- parent [integer,optional] - parent ID of signature
-- document [string,optional] - sign document
-- chain [string,optional] - chain of signature
-- stage [string,optional] - stage of signature
+Parameters (json):
+- document [string,required] - your document code
+- thread [string,required] - additional attribute, when same document is signed in different stories
 </p>
 
 <p>
@@ -117,11 +116,13 @@ Success response:
   "content": {
     "signature": {
       "id": 1,
+      "version": 3,
       "document": "doc_12",
-      "chain": "ticket_42",
-      "stage": "stage_1",
+      "thread": "ticket_42",
       "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
-      "parent": null,
+      "version_created_by": "some_user",
+      "version_created_at": "2021-02-19 15:00:00",
+      "version_comment": "some comment",
       "tags": [
         "customer_1",
         "process_1"
@@ -140,11 +141,12 @@ Success response:
 <p>
 
 Parameters (json):
-- document [string,required] - sign document
-- chain [string,optional] - chain of signature
-- stage [string,optional] - stage of signature
-- signature [string, required] - CMS or XML of signed data
-- parent [int,optional] - ID of parent signature
+- document [string,required] - your document code
+- thread [string,required] - additional attribute, when same document is signed in different stories
+- version [int, required] - version of signature to sign
+- cms [string, required] - CMS or XML of signed data
+- version_created_by [int,optional] - specify a user, who created signature, if needed
+- version_comment [int,optional] - optional comment to signature
 - tags [array, optional] - array of tags
 </p>
 
@@ -158,11 +160,13 @@ Success response:
   "content": {
     "signature": {
       "id": 2,
+      "version": 1,
       "document": "doc_12",
-      "chain": "ticket_42",
-      "stage": "stage_1",
+      "thread": "ticket_42",
       "signature": "MIIIrwYJKoZIhvcNAQcCoIIIoDCCCx+EWy11vQtlLdPQ==",
-      "parent": null,
+      "version_created_by": "some_user",
+      "version_created_at": "2021-02-19 15:00:00",
+      "version_comment": "some comment",
       "tags": [
         "customer_1",
         "process_1"
@@ -171,6 +175,26 @@ Success response:
       "updated_at": "2021-02-18 15:00:00"
     }
   }
+}
+```
+</p>
+</details>
+
+<details>
+<summary><code>DELETE /signature</code> - delete signature and its chain</summary>
+<p>
+
+Parameters (json):
+- document [string,required] - your document code
+- thread [string,required] - additional attribute, when same document is signed in different stories
+</p>
+
+<p>
+
+Success response:
+```json
+{
+  "status": true
 }
 ```
 </p>
@@ -234,3 +258,10 @@ Success response:
 ```
 </p>
 </details>
+
+Software
+========
+
+1. Ubuntu 18.04 Bionic
+1. Nginx 1.16
+1. PHP 7.4

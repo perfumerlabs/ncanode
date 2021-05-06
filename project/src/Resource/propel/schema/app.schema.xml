@@ -4,25 +4,17 @@
     <table name="ncanode_signature" phpName="Signature">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true" />
         <column name="document" type="varchar" size="255" required="true"/> <!-- Sign document code -->
-        <column name="chain" type="varchar" size="255"/> <!-- Signature chain code -->
-        <column name="stage" type="varchar" size="255"/> <!-- Signature stage code -->
-        <column name="parent_id" type="integer"/> <!-- Parent signature ID -->
-        <column name="signature" type="longvarchar" required="true" /> <!-- CMS or XML sign -->
-        <foreign-key foreignTable="ncanode_signature" phpName="Parent">
-            <reference local="parent_id" foreign="id"/>
-        </foreign-key>
+        <column name="thread" type="varchar" size="255" required="true"/> <!-- Thread -->
+        <column name="cms" type="longvarchar" required="true" /> <!-- CMS or XML sign -->
         <behavior name="timestampable"/>
-        <index>
-            <index-column name="document"/>
-            <index-column name="chain"/>
-        </index>
+        <behavior name="versionable">
+            <parameter name="log_created_at" value="true" />
+            <parameter name="log_created_by" value="true" />
+            <parameter name="log_comment" value="true" />
+        </behavior>
         <unique>
+            <unique-column name="thread"/>
             <unique-column name="document"/>
-            <unique-column name="chain"/>
-            <unique-column name="stage"/>
-        </unique>
-        <unique>
-            <unique-column name="parent_id"/>
         </unique>
     </table>
 
@@ -31,29 +23,21 @@
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true" />
         <column name="code" type="varchar" size="255" required="true"/> <!-- Tag code -->
         <behavior name="timestampable"/>
-        <index>
-            <index-column name="code"/>
-        </index>
         <unique>
             <unique-column name="code"/>
         </unique>
     </table>
 
     <!-- Table that describes which roles in which groups user has -->
-    <table name="ncanode_signature_tag" phpName="SignatureTag">
-        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
-        <column name="signature_id" type="integer" required="true"/>
-        <column name="tag_id" type="integer" required="true"/>
+    <table name="ncanode_signature_tag" isCrossRef="true" phpName="SignatureTag">
+        <column name="signature_id" type="integer" primaryKey="true"/>
+        <column name="tag_id" type="integer" primaryKey="true"/>
         <foreign-key foreignTable="ncanode_signature" phpName="Signature" onDelete="CASCADE" onUpdate="CASCADE">
             <reference local="signature_id" foreign="id"/>
         </foreign-key>
         <foreign-key foreignTable="ncanode_tag" phpName="Tag" onDelete="CASCADE" onUpdate="CASCADE">
             <reference local="tag_id" foreign="id"/>
         </foreign-key>
-        <unique>
-            <unique-column name="signature_id"/>
-            <unique-column name="tag_id"/>
-        </unique>
         <behavior name="timestampable"/>
     </table>
 </database>

@@ -14,18 +14,20 @@ class SignatureRepository
 
         $tags = [];
 
-        foreach ($obj->getSignatureTags() as $signature_tag) {
-            $tags[] = $signature_tag->getTag()->getCode();
+        foreach ($obj->getTags() as $tag) {
+            $tags[] = $tag->getCode();
         }
 
         return [
-            'id'         => $obj->getId(),
-            'document'   => $obj->getDocument(),
-            'chain'      => $obj->getChain(),
-            'stage'      => $obj->getStage(),
-            'parent'     => $this->format($obj->getParent()),
-            'signature'  => $obj->getSignature(),
-            'tags'       => $tags,
+            'id' => $obj->getId(),
+            'document' => $obj->getDocument(),
+            'thread' => $obj->getThread(),
+            'version' => $obj->getVersion(),
+            'version_comment' => $obj->getVersionComment(),
+            'version_created_at' => $obj->getVersionCreatedAt('Y-m-d H:i:s'),
+            'version_created_by' => $obj->getVersionCreatedBy(),
+            'cms' => $obj->getCms(),
+            'tags' => $tags,
             'created_at' => $obj->getCreatedAt('Y-m-d H:i:s'),
             'updated_at' => $obj->getUpdatedAt('Y-m-d H:i:s'),
         ];

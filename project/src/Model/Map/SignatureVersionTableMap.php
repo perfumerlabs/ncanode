@@ -2,8 +2,8 @@
 
 namespace Ncanode\Model\Map;
 
-use Ncanode\Model\Signature;
-use Ncanode\Model\SignatureQuery;
+use Ncanode\Model\SignatureVersion;
+use Ncanode\Model\SignatureVersionQuery;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\InstancePoolTrait;
@@ -16,7 +16,7 @@ use Propel\Runtime\Map\TableMapTrait;
 
 
 /**
- * This class defines the structure of the 'ncanode_signature' table.
+ * This class defines the structure of the 'ncanode_signature_version' table.
  *
  *
  *
@@ -25,7 +25,7 @@ use Propel\Runtime\Map\TableMapTrait;
  * ORDER BY clause to know whether it needs to apply SQL to make the ORDER BY case-insensitive
  * (i.e. if it's a text column type).
  */
-class SignatureTableMap extends TableMap
+class SignatureVersionTableMap extends TableMap
 {
     use InstancePoolTrait;
     use TableMapTrait;
@@ -33,7 +33,7 @@ class SignatureTableMap extends TableMap
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = '.Map.SignatureTableMap';
+    const CLASS_NAME = '.Map.SignatureVersionTableMap';
 
     /**
      * The default database name for this class
@@ -43,17 +43,17 @@ class SignatureTableMap extends TableMap
     /**
      * The table name for this class
      */
-    const TABLE_NAME = 'ncanode_signature';
+    const TABLE_NAME = 'ncanode_signature_version';
 
     /**
      * The related Propel class for this table
      */
-    const OM_CLASS = '\\Ncanode\\Model\\Signature';
+    const OM_CLASS = '\\Ncanode\\Model\\SignatureVersion';
 
     /**
      * A class that can be returned by this tableMap
      */
-    const CLASS_DEFAULT = 'Signature';
+    const CLASS_DEFAULT = 'SignatureVersion';
 
     /**
      * The total number of columns
@@ -73,52 +73,52 @@ class SignatureTableMap extends TableMap
     /**
      * the column name for the id field
      */
-    const COL_ID = 'ncanode_signature.id';
+    const COL_ID = 'ncanode_signature_version.id';
 
     /**
      * the column name for the document field
      */
-    const COL_DOCUMENT = 'ncanode_signature.document';
+    const COL_DOCUMENT = 'ncanode_signature_version.document';
 
     /**
      * the column name for the thread field
      */
-    const COL_THREAD = 'ncanode_signature.thread';
+    const COL_THREAD = 'ncanode_signature_version.thread';
 
     /**
      * the column name for the cms field
      */
-    const COL_CMS = 'ncanode_signature.cms';
+    const COL_CMS = 'ncanode_signature_version.cms';
 
     /**
      * the column name for the created_at field
      */
-    const COL_CREATED_AT = 'ncanode_signature.created_at';
+    const COL_CREATED_AT = 'ncanode_signature_version.created_at';
 
     /**
      * the column name for the updated_at field
      */
-    const COL_UPDATED_AT = 'ncanode_signature.updated_at';
+    const COL_UPDATED_AT = 'ncanode_signature_version.updated_at';
 
     /**
      * the column name for the version field
      */
-    const COL_VERSION = 'ncanode_signature.version';
+    const COL_VERSION = 'ncanode_signature_version.version';
 
     /**
      * the column name for the version_created_at field
      */
-    const COL_VERSION_CREATED_AT = 'ncanode_signature.version_created_at';
+    const COL_VERSION_CREATED_AT = 'ncanode_signature_version.version_created_at';
 
     /**
      * the column name for the version_created_by field
      */
-    const COL_VERSION_CREATED_BY = 'ncanode_signature.version_created_by';
+    const COL_VERSION_CREATED_BY = 'ncanode_signature_version.version_created_by';
 
     /**
      * the column name for the version_comment field
      */
-    const COL_VERSION_COMMENT = 'ncanode_signature.version_comment';
+    const COL_VERSION_COMMENT = 'ncanode_signature_version.version_comment';
 
     /**
      * The default string format for model objects of the related table
@@ -134,7 +134,7 @@ class SignatureTableMap extends TableMap
     protected static $fieldNames = array (
         self::TYPE_PHPNAME       => array('Id', 'Document', 'Thread', 'Cms', 'CreatedAt', 'UpdatedAt', 'Version', 'VersionCreatedAt', 'VersionCreatedBy', 'VersionComment', ),
         self::TYPE_CAMELNAME     => array('id', 'document', 'thread', 'cms', 'createdAt', 'updatedAt', 'version', 'versionCreatedAt', 'versionCreatedBy', 'versionComment', ),
-        self::TYPE_COLNAME       => array(SignatureTableMap::COL_ID, SignatureTableMap::COL_DOCUMENT, SignatureTableMap::COL_THREAD, SignatureTableMap::COL_CMS, SignatureTableMap::COL_CREATED_AT, SignatureTableMap::COL_UPDATED_AT, SignatureTableMap::COL_VERSION, SignatureTableMap::COL_VERSION_CREATED_AT, SignatureTableMap::COL_VERSION_CREATED_BY, SignatureTableMap::COL_VERSION_COMMENT, ),
+        self::TYPE_COLNAME       => array(SignatureVersionTableMap::COL_ID, SignatureVersionTableMap::COL_DOCUMENT, SignatureVersionTableMap::COL_THREAD, SignatureVersionTableMap::COL_CMS, SignatureVersionTableMap::COL_CREATED_AT, SignatureVersionTableMap::COL_UPDATED_AT, SignatureVersionTableMap::COL_VERSION, SignatureVersionTableMap::COL_VERSION_CREATED_AT, SignatureVersionTableMap::COL_VERSION_CREATED_BY, SignatureVersionTableMap::COL_VERSION_COMMENT, ),
         self::TYPE_FIELDNAME     => array('id', 'document', 'thread', 'cms', 'created_at', 'updated_at', 'version', 'version_created_at', 'version_created_by', 'version_comment', ),
         self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, )
     );
@@ -148,7 +148,7 @@ class SignatureTableMap extends TableMap
     protected static $fieldKeys = array (
         self::TYPE_PHPNAME       => array('Id' => 0, 'Document' => 1, 'Thread' => 2, 'Cms' => 3, 'CreatedAt' => 4, 'UpdatedAt' => 5, 'Version' => 6, 'VersionCreatedAt' => 7, 'VersionCreatedBy' => 8, 'VersionComment' => 9, ),
         self::TYPE_CAMELNAME     => array('id' => 0, 'document' => 1, 'thread' => 2, 'cms' => 3, 'createdAt' => 4, 'updatedAt' => 5, 'version' => 6, 'versionCreatedAt' => 7, 'versionCreatedBy' => 8, 'versionComment' => 9, ),
-        self::TYPE_COLNAME       => array(SignatureTableMap::COL_ID => 0, SignatureTableMap::COL_DOCUMENT => 1, SignatureTableMap::COL_THREAD => 2, SignatureTableMap::COL_CMS => 3, SignatureTableMap::COL_CREATED_AT => 4, SignatureTableMap::COL_UPDATED_AT => 5, SignatureTableMap::COL_VERSION => 6, SignatureTableMap::COL_VERSION_CREATED_AT => 7, SignatureTableMap::COL_VERSION_CREATED_BY => 8, SignatureTableMap::COL_VERSION_COMMENT => 9, ),
+        self::TYPE_COLNAME       => array(SignatureVersionTableMap::COL_ID => 0, SignatureVersionTableMap::COL_DOCUMENT => 1, SignatureVersionTableMap::COL_THREAD => 2, SignatureVersionTableMap::COL_CMS => 3, SignatureVersionTableMap::COL_CREATED_AT => 4, SignatureVersionTableMap::COL_UPDATED_AT => 5, SignatureVersionTableMap::COL_VERSION => 6, SignatureVersionTableMap::COL_VERSION_CREATED_AT => 7, SignatureVersionTableMap::COL_VERSION_CREATED_BY => 8, SignatureVersionTableMap::COL_VERSION_COMMENT => 9, ),
         self::TYPE_FIELDNAME     => array('id' => 0, 'document' => 1, 'thread' => 2, 'cms' => 3, 'created_at' => 4, 'updated_at' => 5, 'version' => 6, 'version_created_at' => 7, 'version_created_by' => 8, 'version_comment' => 9, ),
         self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, )
     );
@@ -161,85 +161,85 @@ class SignatureTableMap extends TableMap
     protected $normalizedColumnNameMap = [
 
         'Id' => 'ID',
-        'Signature.Id' => 'ID',
+        'SignatureVersion.Id' => 'ID',
         'id' => 'ID',
-        'signature.id' => 'ID',
-        'SignatureTableMap::COL_ID' => 'ID',
+        'signatureVersion.id' => 'ID',
+        'SignatureVersionTableMap::COL_ID' => 'ID',
         'COL_ID' => 'ID',
         'id' => 'ID',
-        'ncanode_signature.id' => 'ID',
+        'ncanode_signature_version.id' => 'ID',
         'Document' => 'DOCUMENT',
-        'Signature.Document' => 'DOCUMENT',
+        'SignatureVersion.Document' => 'DOCUMENT',
         'document' => 'DOCUMENT',
-        'signature.document' => 'DOCUMENT',
-        'SignatureTableMap::COL_DOCUMENT' => 'DOCUMENT',
+        'signatureVersion.document' => 'DOCUMENT',
+        'SignatureVersionTableMap::COL_DOCUMENT' => 'DOCUMENT',
         'COL_DOCUMENT' => 'DOCUMENT',
         'document' => 'DOCUMENT',
-        'ncanode_signature.document' => 'DOCUMENT',
+        'ncanode_signature_version.document' => 'DOCUMENT',
         'Thread' => 'THREAD',
-        'Signature.Thread' => 'THREAD',
+        'SignatureVersion.Thread' => 'THREAD',
         'thread' => 'THREAD',
-        'signature.thread' => 'THREAD',
-        'SignatureTableMap::COL_THREAD' => 'THREAD',
+        'signatureVersion.thread' => 'THREAD',
+        'SignatureVersionTableMap::COL_THREAD' => 'THREAD',
         'COL_THREAD' => 'THREAD',
         'thread' => 'THREAD',
-        'ncanode_signature.thread' => 'THREAD',
+        'ncanode_signature_version.thread' => 'THREAD',
         'Cms' => 'CMS',
-        'Signature.Cms' => 'CMS',
+        'SignatureVersion.Cms' => 'CMS',
         'cms' => 'CMS',
-        'signature.cms' => 'CMS',
-        'SignatureTableMap::COL_CMS' => 'CMS',
+        'signatureVersion.cms' => 'CMS',
+        'SignatureVersionTableMap::COL_CMS' => 'CMS',
         'COL_CMS' => 'CMS',
         'cms' => 'CMS',
-        'ncanode_signature.cms' => 'CMS',
+        'ncanode_signature_version.cms' => 'CMS',
         'CreatedAt' => 'CREATED_AT',
-        'Signature.CreatedAt' => 'CREATED_AT',
+        'SignatureVersion.CreatedAt' => 'CREATED_AT',
         'createdAt' => 'CREATED_AT',
-        'signature.createdAt' => 'CREATED_AT',
-        'SignatureTableMap::COL_CREATED_AT' => 'CREATED_AT',
+        'signatureVersion.createdAt' => 'CREATED_AT',
+        'SignatureVersionTableMap::COL_CREATED_AT' => 'CREATED_AT',
         'COL_CREATED_AT' => 'CREATED_AT',
         'created_at' => 'CREATED_AT',
-        'ncanode_signature.created_at' => 'CREATED_AT',
+        'ncanode_signature_version.created_at' => 'CREATED_AT',
         'UpdatedAt' => 'UPDATED_AT',
-        'Signature.UpdatedAt' => 'UPDATED_AT',
+        'SignatureVersion.UpdatedAt' => 'UPDATED_AT',
         'updatedAt' => 'UPDATED_AT',
-        'signature.updatedAt' => 'UPDATED_AT',
-        'SignatureTableMap::COL_UPDATED_AT' => 'UPDATED_AT',
+        'signatureVersion.updatedAt' => 'UPDATED_AT',
+        'SignatureVersionTableMap::COL_UPDATED_AT' => 'UPDATED_AT',
         'COL_UPDATED_AT' => 'UPDATED_AT',
         'updated_at' => 'UPDATED_AT',
-        'ncanode_signature.updated_at' => 'UPDATED_AT',
+        'ncanode_signature_version.updated_at' => 'UPDATED_AT',
         'Version' => 'VERSION',
-        'Signature.Version' => 'VERSION',
+        'SignatureVersion.Version' => 'VERSION',
         'version' => 'VERSION',
-        'signature.version' => 'VERSION',
-        'SignatureTableMap::COL_VERSION' => 'VERSION',
+        'signatureVersion.version' => 'VERSION',
+        'SignatureVersionTableMap::COL_VERSION' => 'VERSION',
         'COL_VERSION' => 'VERSION',
         'version' => 'VERSION',
-        'ncanode_signature.version' => 'VERSION',
+        'ncanode_signature_version.version' => 'VERSION',
         'VersionCreatedAt' => 'VERSION_CREATED_AT',
-        'Signature.VersionCreatedAt' => 'VERSION_CREATED_AT',
+        'SignatureVersion.VersionCreatedAt' => 'VERSION_CREATED_AT',
         'versionCreatedAt' => 'VERSION_CREATED_AT',
-        'signature.versionCreatedAt' => 'VERSION_CREATED_AT',
-        'SignatureTableMap::COL_VERSION_CREATED_AT' => 'VERSION_CREATED_AT',
+        'signatureVersion.versionCreatedAt' => 'VERSION_CREATED_AT',
+        'SignatureVersionTableMap::COL_VERSION_CREATED_AT' => 'VERSION_CREATED_AT',
         'COL_VERSION_CREATED_AT' => 'VERSION_CREATED_AT',
         'version_created_at' => 'VERSION_CREATED_AT',
-        'ncanode_signature.version_created_at' => 'VERSION_CREATED_AT',
+        'ncanode_signature_version.version_created_at' => 'VERSION_CREATED_AT',
         'VersionCreatedBy' => 'VERSION_CREATED_BY',
-        'Signature.VersionCreatedBy' => 'VERSION_CREATED_BY',
+        'SignatureVersion.VersionCreatedBy' => 'VERSION_CREATED_BY',
         'versionCreatedBy' => 'VERSION_CREATED_BY',
-        'signature.versionCreatedBy' => 'VERSION_CREATED_BY',
-        'SignatureTableMap::COL_VERSION_CREATED_BY' => 'VERSION_CREATED_BY',
+        'signatureVersion.versionCreatedBy' => 'VERSION_CREATED_BY',
+        'SignatureVersionTableMap::COL_VERSION_CREATED_BY' => 'VERSION_CREATED_BY',
         'COL_VERSION_CREATED_BY' => 'VERSION_CREATED_BY',
         'version_created_by' => 'VERSION_CREATED_BY',
-        'ncanode_signature.version_created_by' => 'VERSION_CREATED_BY',
+        'ncanode_signature_version.version_created_by' => 'VERSION_CREATED_BY',
         'VersionComment' => 'VERSION_COMMENT',
-        'Signature.VersionComment' => 'VERSION_COMMENT',
+        'SignatureVersion.VersionComment' => 'VERSION_COMMENT',
         'versionComment' => 'VERSION_COMMENT',
-        'signature.versionComment' => 'VERSION_COMMENT',
-        'SignatureTableMap::COL_VERSION_COMMENT' => 'VERSION_COMMENT',
+        'signatureVersion.versionComment' => 'VERSION_COMMENT',
+        'SignatureVersionTableMap::COL_VERSION_COMMENT' => 'VERSION_COMMENT',
         'COL_VERSION_COMMENT' => 'VERSION_COMMENT',
         'version_comment' => 'VERSION_COMMENT',
-        'ncanode_signature.version_comment' => 'VERSION_COMMENT',
+        'ncanode_signature_version.version_comment' => 'VERSION_COMMENT',
     ];
 
     /**
@@ -252,21 +252,20 @@ class SignatureTableMap extends TableMap
     public function initialize()
     {
         // attributes
-        $this->setName('ncanode_signature');
-        $this->setPhpName('Signature');
+        $this->setName('ncanode_signature_version');
+        $this->setPhpName('SignatureVersion');
         $this->setIdentifierQuoting(false);
-        $this->setClassName('\\Ncanode\\Model\\Signature');
+        $this->setClassName('\\Ncanode\\Model\\SignatureVersion');
         $this->setPackage('');
-        $this->setUseIdGenerator(true);
-        $this->setPrimaryKeyMethodInfo('ncanode_signature_id_seq');
+        $this->setUseIdGenerator(false);
         // columns
-        $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
+        $this->addForeignPrimaryKey('id', 'Id', 'INTEGER' , 'ncanode_signature', 'id', true, null, null);
         $this->addColumn('document', 'Document', 'VARCHAR', true, 255, null);
         $this->addColumn('thread', 'Thread', 'VARCHAR', true, 255, null);
         $this->addColumn('cms', 'Cms', 'LONGVARCHAR', true, null, null);
         $this->addColumn('created_at', 'CreatedAt', 'TIMESTAMP', false, null, null);
         $this->addColumn('updated_at', 'UpdatedAt', 'TIMESTAMP', false, null, null);
-        $this->addColumn('version', 'Version', 'INTEGER', false, null, 0);
+        $this->addPrimaryKey('version', 'Version', 'INTEGER', true, null, 0);
         $this->addColumn('version_created_at', 'VersionCreatedAt', 'TIMESTAMP', false, null, null);
         $this->addColumn('version_created_by', 'VersionCreatedBy', 'VARCHAR', false, 100, null);
         $this->addColumn('version_comment', 'VersionComment', 'VARCHAR', false, 255, null);
@@ -277,45 +276,66 @@ class SignatureTableMap extends TableMap
      */
     public function buildRelations()
     {
-        $this->addRelation('SignatureTag', '\\Ncanode\\Model\\SignatureTag', RelationMap::ONE_TO_MANY, array (
-  0 =>
-  array (
-    0 => ':signature_id',
-    1 => ':id',
-  ),
-), 'CASCADE', 'CASCADE', 'SignatureTags', false);
-        $this->addRelation('SignatureVersion', '\\Ncanode\\Model\\SignatureVersion', RelationMap::ONE_TO_MANY, array (
+        $this->addRelation('Signature', '\\Ncanode\\Model\\Signature', RelationMap::MANY_TO_ONE, array (
   0 =>
   array (
     0 => ':id',
     1 => ':id',
   ),
-), 'CASCADE', null, 'SignatureVersions', false);
-        $this->addRelation('Tag', '\\Ncanode\\Model\\Tag', RelationMap::MANY_TO_MANY, array(), 'CASCADE', 'CASCADE', 'Tags');
+), 'CASCADE', null, null, false);
     } // buildRelations()
 
     /**
+     * Adds an object to the instance pool.
      *
-     * Gets the list of behaviors registered for this table
+     * Propel keeps cached copies of objects in an instance pool when they are retrieved
+     * from the database. In some cases you may need to explicitly add objects
+     * to the cache in order to ensure that the same objects are always returned by find*()
+     * and findPk*() calls.
      *
-     * @return array Associative array (name => parameters) of behaviors
+     * @param \Ncanode\Model\SignatureVersion $obj A \Ncanode\Model\SignatureVersion object.
+     * @param string $key             (optional) key to use for instance map (for performance boost if key was already calculated externally).
      */
-    public function getBehaviors()
+    public static function addInstanceToPool($obj, $key = null)
     {
-        return array(
-            'timestampable' => array('create_column' => 'created_at', 'update_column' => 'updated_at', 'disable_created_at' => 'false', 'disable_updated_at' => 'false', ),
-            'versionable' => array('version_column' => 'version', 'version_table' => '', 'log_created_at' => 'true', 'log_created_by' => 'true', 'log_comment' => 'true', 'version_created_at_column' => 'version_created_at', 'version_created_by_column' => 'version_created_by', 'version_comment_column' => 'version_comment', 'indices' => 'false', ),
-        );
-    } // getBehaviors()
+        if (Propel::isInstancePoolingEnabled()) {
+            if (null === $key) {
+                $key = serialize([(null === $obj->getId() || is_scalar($obj->getId()) || is_callable([$obj->getId(), '__toString']) ? (string) $obj->getId() : $obj->getId()), (null === $obj->getVersion() || is_scalar($obj->getVersion()) || is_callable([$obj->getVersion(), '__toString']) ? (string) $obj->getVersion() : $obj->getVersion())]);
+            } // if key === null
+            self::$instances[$key] = $obj;
+        }
+    }
+
     /**
-     * Method to invalidate the instance pool of all tables related to ncanode_signature     * by a foreign key with ON DELETE CASCADE
+     * Removes an object from the instance pool.
+     *
+     * Propel keeps cached copies of objects in an instance pool when they are retrieved
+     * from the database.  In some cases -- especially when you override doDelete
+     * methods in your stub classes -- you may need to explicitly remove objects
+     * from the cache in order to prevent returning objects that no longer exist.
+     *
+     * @param mixed $value A \Ncanode\Model\SignatureVersion object or a primary key value.
      */
-    public static function clearRelatedInstancePool()
+    public static function removeInstanceFromPool($value)
     {
-        // Invalidate objects in related instance pools,
-        // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
-        SignatureTagTableMap::clearInstancePool();
-        SignatureVersionTableMap::clearInstancePool();
+        if (Propel::isInstancePoolingEnabled() && null !== $value) {
+            if (is_object($value) && $value instanceof \Ncanode\Model\SignatureVersion) {
+                $key = serialize([(null === $value->getId() || is_scalar($value->getId()) || is_callable([$value->getId(), '__toString']) ? (string) $value->getId() : $value->getId()), (null === $value->getVersion() || is_scalar($value->getVersion()) || is_callable([$value->getVersion(), '__toString']) ? (string) $value->getVersion() : $value->getVersion())]);
+
+            } elseif (is_array($value) && count($value) === 2) {
+                // assume we've been passed a primary key";
+                $key = serialize([(null === $value[0] || is_scalar($value[0]) || is_callable([$value[0], '__toString']) ? (string) $value[0] : $value[0]), (null === $value[1] || is_scalar($value[1]) || is_callable([$value[1], '__toString']) ? (string) $value[1] : $value[1])]);
+            } elseif ($value instanceof Criteria) {
+                self::$instances = [];
+
+                return;
+            } else {
+                $e = new PropelException("Invalid value passed to removeInstanceFromPool().  Expected primary key or \Ncanode\Model\SignatureVersion object; got " . (is_object($value) ? get_class($value) . ' object.' : var_export($value, true)));
+                throw $e;
+            }
+
+            unset(self::$instances[$key]);
+        }
     }
 
     /**
@@ -334,11 +354,11 @@ class SignatureTableMap extends TableMap
     public static function getPrimaryKeyHashFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
     {
         // If the PK cannot be derived from the row, return NULL.
-        if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)] === null) {
+        if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)] === null && $row[TableMap::TYPE_NUM == $indexType ? 6 + $offset : static::translateFieldName('Version', TableMap::TYPE_PHPNAME, $indexType)] === null) {
             return null;
         }
 
-        return null === $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
+        return serialize([(null === $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)]), (null === $row[TableMap::TYPE_NUM == $indexType ? 6 + $offset : static::translateFieldName('Version', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 6 + $offset : static::translateFieldName('Version', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 6 + $offset : static::translateFieldName('Version', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 6 + $offset : static::translateFieldName('Version', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 6 + $offset : static::translateFieldName('Version', TableMap::TYPE_PHPNAME, $indexType)])]);
     }
 
     /**
@@ -355,11 +375,20 @@ class SignatureTableMap extends TableMap
      */
     public static function getPrimaryKeyFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
     {
-        return (int) $row[
+            $pks = [];
+
+        $pks[] = (int) $row[
             $indexType == TableMap::TYPE_NUM
                 ? 0 + $offset
                 : self::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)
         ];
+        $pks[] = (int) $row[
+            $indexType == TableMap::TYPE_NUM
+                ? 6 + $offset
+                : self::translateFieldName('Version', TableMap::TYPE_PHPNAME, $indexType)
+        ];
+
+        return $pks;
     }
 
     /**
@@ -375,7 +404,7 @@ class SignatureTableMap extends TableMap
      */
     public static function getOMClass($withPrefix = true)
     {
-        return $withPrefix ? SignatureTableMap::CLASS_DEFAULT : SignatureTableMap::OM_CLASS;
+        return $withPrefix ? SignatureVersionTableMap::CLASS_DEFAULT : SignatureVersionTableMap::OM_CLASS;
     }
 
     /**
@@ -389,22 +418,22 @@ class SignatureTableMap extends TableMap
      *
      * @throws PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array           (Signature object, last column rank)
+     * @return array           (SignatureVersion object, last column rank)
      */
     public static function populateObject($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
     {
-        $key = SignatureTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
-        if (null !== ($obj = SignatureTableMap::getInstanceFromPool($key))) {
+        $key = SignatureVersionTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
+        if (null !== ($obj = SignatureVersionTableMap::getInstanceFromPool($key))) {
             // We no longer rehydrate the object, since this can cause data loss.
             // See http://www.propelorm.org/ticket/509
             // $obj->hydrate($row, $offset, true); // rehydrate
-            $col = $offset + SignatureTableMap::NUM_HYDRATE_COLUMNS;
+            $col = $offset + SignatureVersionTableMap::NUM_HYDRATE_COLUMNS;
         } else {
-            $cls = SignatureTableMap::OM_CLASS;
-            /** @var Signature $obj */
+            $cls = SignatureVersionTableMap::OM_CLASS;
+            /** @var SignatureVersion $obj */
             $obj = new $cls();
             $col = $obj->hydrate($row, $offset, false, $indexType);
-            SignatureTableMap::addInstanceToPool($obj, $key);
+            SignatureVersionTableMap::addInstanceToPool($obj, $key);
         }
 
         return array($obj, $col);
@@ -427,18 +456,18 @@ class SignatureTableMap extends TableMap
         $cls = static::getOMClass(false);
         // populate the object(s)
         while ($row = $dataFetcher->fetch()) {
-            $key = SignatureTableMap::getPrimaryKeyHashFromRow($row, 0, $dataFetcher->getIndexType());
-            if (null !== ($obj = SignatureTableMap::getInstanceFromPool($key))) {
+            $key = SignatureVersionTableMap::getPrimaryKeyHashFromRow($row, 0, $dataFetcher->getIndexType());
+            if (null !== ($obj = SignatureVersionTableMap::getInstanceFromPool($key))) {
                 // We no longer rehydrate the object, since this can cause data loss.
                 // See http://www.propelorm.org/ticket/509
                 // $obj->hydrate($row, 0, true); // rehydrate
                 $results[] = $obj;
             } else {
-                /** @var Signature $obj */
+                /** @var SignatureVersion $obj */
                 $obj = new $cls();
                 $obj->hydrate($row);
                 $results[] = $obj;
-                SignatureTableMap::addInstanceToPool($obj, $key);
+                SignatureVersionTableMap::addInstanceToPool($obj, $key);
             } // if key exists
         }
 
@@ -459,16 +488,16 @@ class SignatureTableMap extends TableMap
     public static function addSelectColumns(Criteria $criteria, $alias = null)
     {
         if (null === $alias) {
-            $criteria->addSelectColumn(SignatureTableMap::COL_ID);
-            $criteria->addSelectColumn(SignatureTableMap::COL_DOCUMENT);
-            $criteria->addSelectColumn(SignatureTableMap::COL_THREAD);
-            $criteria->addSelectColumn(SignatureTableMap::COL_CMS);
-            $criteria->addSelectColumn(SignatureTableMap::COL_CREATED_AT);
-            $criteria->addSelectColumn(SignatureTableMap::COL_UPDATED_AT);
-            $criteria->addSelectColumn(SignatureTableMap::COL_VERSION);
-            $criteria->addSelectColumn(SignatureTableMap::COL_VERSION_CREATED_AT);
-            $criteria->addSelectColumn(SignatureTableMap::COL_VERSION_CREATED_BY);
-            $criteria->addSelectColumn(SignatureTableMap::COL_VERSION_COMMENT);
+            $criteria->addSelectColumn(SignatureVersionTableMap::COL_ID);
+            $criteria->addSelectColumn(SignatureVersionTableMap::COL_DOCUMENT);
+            $criteria->addSelectColumn(SignatureVersionTableMap::COL_THREAD);
+            $criteria->addSelectColumn(SignatureVersionTableMap::COL_CMS);
+            $criteria->addSelectColumn(SignatureVersionTableMap::COL_CREATED_AT);
+            $criteria->addSelectColumn(SignatureVersionTableMap::COL_UPDATED_AT);
+            $criteria->addSelectColumn(SignatureVersionTableMap::COL_VERSION);
+            $criteria->addSelectColumn(SignatureVersionTableMap::COL_VERSION_CREATED_AT);
+            $criteria->addSelectColumn(SignatureVersionTableMap::COL_VERSION_CREATED_BY);
+            $criteria->addSelectColumn(SignatureVersionTableMap::COL_VERSION_COMMENT);
         } else {
             $criteria->addSelectColumn($alias . '.id');
             $criteria->addSelectColumn($alias . '.document');
@@ -497,16 +526,16 @@ class SignatureTableMap extends TableMap
     public static function removeSelectColumns(Criteria $criteria, $alias = null)
     {
         if (null === $alias) {
-            $criteria->removeSelectColumn(SignatureTableMap::COL_ID);
-            $criteria->removeSelectColumn(SignatureTableMap::COL_DOCUMENT);
-            $criteria->removeSelectColumn(SignatureTableMap::COL_THREAD);
-            $criteria->removeSelectColumn(SignatureTableMap::COL_CMS);
-            $criteria->removeSelectColumn(SignatureTableMap::COL_CREATED_AT);
-            $criteria->removeSelectColumn(SignatureTableMap::COL_UPDATED_AT);
-            $criteria->removeSelectColumn(SignatureTableMap::COL_VERSION);
-            $criteria->removeSelectColumn(SignatureTableMap::COL_VERSION_CREATED_AT);
-            $criteria->removeSelectColumn(SignatureTableMap::COL_VERSION_CREATED_BY);
-            $criteria->removeSelectColumn(SignatureTableMap::COL_VERSION_COMMENT);
+            $criteria->removeSelectColumn(SignatureVersionTableMap::COL_ID);
+            $criteria->removeSelectColumn(SignatureVersionTableMap::COL_DOCUMENT);
+            $criteria->removeSelectColumn(SignatureVersionTableMap::COL_THREAD);
+            $criteria->removeSelectColumn(SignatureVersionTableMap::COL_CMS);
+            $criteria->removeSelectColumn(SignatureVersionTableMap::COL_CREATED_AT);
+            $criteria->removeSelectColumn(SignatureVersionTableMap::COL_UPDATED_AT);
+            $criteria->removeSelectColumn(SignatureVersionTableMap::COL_VERSION);
+            $criteria->removeSelectColumn(SignatureVersionTableMap::COL_VERSION_CREATED_AT);
+            $criteria->removeSelectColumn(SignatureVersionTableMap::COL_VERSION_CREATED_BY);
+            $criteria->removeSelectColumn(SignatureVersionTableMap::COL_VERSION_COMMENT);
         } else {
             $criteria->removeSelectColumn($alias . '.id');
             $criteria->removeSelectColumn($alias . '.document');
@@ -530,7 +559,7 @@ class SignatureTableMap extends TableMap
      */
     public static function getTableMap()
     {
-        return Propel::getServiceContainer()->getDatabaseMap(SignatureTableMap::DATABASE_NAME)->getTable(SignatureTableMap::TABLE_NAME);
+        return Propel::getServiceContainer()->getDatabaseMap(SignatureVersionTableMap::DATABASE_NAME)->getTable(SignatureVersionTableMap::TABLE_NAME);
     }
 
     /**
@@ -538,16 +567,16 @@ class SignatureTableMap extends TableMap
      */
     public static function buildTableMap()
     {
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap(SignatureTableMap::DATABASE_NAME);
-        if (!$dbMap->hasTable(SignatureTableMap::TABLE_NAME)) {
-            $dbMap->addTableObject(new SignatureTableMap());
+        $dbMap = Propel::getServiceContainer()->getDatabaseMap(SignatureVersionTableMap::DATABASE_NAME);
+        if (!$dbMap->hasTable(SignatureVersionTableMap::TABLE_NAME)) {
+            $dbMap->addTableObject(new SignatureVersionTableMap());
         }
     }
 
     /**
-     * Performs a DELETE on the database, given a Signature or Criteria object OR a primary key value.
+     * Performs a DELETE on the database, given a SignatureVersion or Criteria object OR a primary key value.
      *
-     * @param mixed               $values Criteria or Signature object or primary key or array of primary keys
+     * @param mixed               $values Criteria or SignatureVersion object or primary key or array of primary keys
      *              which is used to create the DELETE statement
      * @param  ConnectionInterface $con the connection to use
      * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
@@ -558,27 +587,37 @@ class SignatureTableMap extends TableMap
      public static function doDelete($values, ConnectionInterface $con = null)
      {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(SignatureTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(SignatureVersionTableMap::DATABASE_NAME);
         }
 
         if ($values instanceof Criteria) {
             // rename for clarity
             $criteria = $values;
-        } elseif ($values instanceof \Ncanode\Model\Signature) { // it's a model object
+        } elseif ($values instanceof \Ncanode\Model\SignatureVersion) { // it's a model object
             // create criteria based on pk values
             $criteria = $values->buildPkeyCriteria();
         } else { // it's a primary key, or an array of pks
-            $criteria = new Criteria(SignatureTableMap::DATABASE_NAME);
-            $criteria->add(SignatureTableMap::COL_ID, (array) $values, Criteria::IN);
+            $criteria = new Criteria(SignatureVersionTableMap::DATABASE_NAME);
+            // primary key is composite; we therefore, expect
+            // the primary key passed to be an array of pkey values
+            if (count($values) == count($values, COUNT_RECURSIVE)) {
+                // array is not multi-dimensional
+                $values = array($values);
+            }
+            foreach ($values as $value) {
+                $criterion = $criteria->getNewCriterion(SignatureVersionTableMap::COL_ID, $value[0]);
+                $criterion->addAnd($criteria->getNewCriterion(SignatureVersionTableMap::COL_VERSION, $value[1]));
+                $criteria->addOr($criterion);
+            }
         }
 
-        $query = SignatureQuery::create()->mergeWith($criteria);
+        $query = SignatureVersionQuery::create()->mergeWith($criteria);
 
         if ($values instanceof Criteria) {
-            SignatureTableMap::clearInstancePool();
+            SignatureVersionTableMap::clearInstancePool();
         } elseif (!is_object($values)) { // it's a primary key, or an array of pks
             foreach ((array) $values as $singleval) {
-                SignatureTableMap::removeInstanceFromPool($singleval);
+                SignatureVersionTableMap::removeInstanceFromPool($singleval);
             }
         }
 
@@ -586,20 +625,20 @@ class SignatureTableMap extends TableMap
     }
 
     /**
-     * Deletes all rows from the ncanode_signature table.
+     * Deletes all rows from the ncanode_signature_version table.
      *
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
     public static function doDeleteAll(ConnectionInterface $con = null)
     {
-        return SignatureQuery::create()->doDeleteAll($con);
+        return SignatureVersionQuery::create()->doDeleteAll($con);
     }
 
     /**
-     * Performs an INSERT on the database, given a Signature or Criteria object.
+     * Performs an INSERT on the database, given a SignatureVersion or Criteria object.
      *
-     * @param mixed               $criteria Criteria or Signature object containing data that is used to create the INSERT statement.
+     * @param mixed               $criteria Criteria or SignatureVersion object containing data that is used to create the INSERT statement.
      * @param ConnectionInterface $con the ConnectionInterface connection to use
      * @return mixed           The new primary key.
      * @throws PropelException Any exceptions caught during processing will be
@@ -608,22 +647,18 @@ class SignatureTableMap extends TableMap
     public static function doInsert($criteria, ConnectionInterface $con = null)
     {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(SignatureTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(SignatureVersionTableMap::DATABASE_NAME);
         }
 
         if ($criteria instanceof Criteria) {
             $criteria = clone $criteria; // rename for clarity
         } else {
-            $criteria = $criteria->buildCriteria(); // build Criteria from Signature object
-        }
-
-        if ($criteria->containsKey(SignatureTableMap::COL_ID) && $criteria->keyContainsValue(SignatureTableMap::COL_ID) ) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key ('.SignatureTableMap::COL_ID.')');
+            $criteria = $criteria->buildCriteria(); // build Criteria from SignatureVersion object
         }
 
 
         // Set the correct dbName
-        $query = SignatureQuery::create()->mergeWith($criteria);
+        $query = SignatureVersionQuery::create()->mergeWith($criteria);
 
         // use transaction because $criteria could contain info
         // for more than one table (I guess, conceivably)
@@ -632,7 +667,7 @@ class SignatureTableMap extends TableMap
         });
     }
 
-} // SignatureTableMap
+} // SignatureVersionTableMap
 // This is the static code needed to register the TableMap for this table with the main Propel class.
 //
-SignatureTableMap::buildTableMap();
+SignatureVersionTableMap::buildTableMap();
